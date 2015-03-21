@@ -46,7 +46,7 @@ def load_levels(filename):
 	with open(filename) as levelfile:
 		levels = [[]]
 		for line in levelfile.read().splitlines():
-			if line.lstrip().startswith('#'):
+			if line.lstrip().startswith(WALL):
 				levels[-1].append(line)
 			elif levels[-1]:
 				levels.append([])

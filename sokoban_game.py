@@ -16,7 +16,8 @@ Controls:
 - Mouse Click: Fast-move, push-planning
 - q: quit, r: reload level, u: undo
 - s: save snapshot, l: load snapshot
-- PgUp, PgDn: Next/Previous Level
+- PgUp/PgDn: Next/Previous Level
+- Shift + PgUp/PgDn: Next/Previous unsolved Level (if any)
 """
 
 import sokoban
