@@ -23,9 +23,8 @@ Controls:
 import sokoban
 import Tkinter as tk
 import json
-import time
 
-DIRECTIONS = {"Right": (0,+1), "Left": (0,-1), "Up": (-1,0), "Down": (+1,0)}
+DIRECTIONS = {"Right": (0, +1), "Left": (0, -1), "Up": (-1, 0), "Down": (+1, 0)}
 DIRECTIONS_INV = dict((v, k) for (k, v) in DIRECTIONS.items())
 
 class SokobanFrame(tk.Frame):
@@ -182,7 +181,7 @@ if __name__ == "__main__":
 	try:
 		with open(savesfile) as f:
 			gamestate = json.load(f)
-	except:
+	except IOError:
 		gamestate = {}
 	scores = gamestate.get(levelfile, [None] * len(levels))
 

@@ -107,13 +107,13 @@ class SokobanGame:
 		self.state[self.r + dr][self.c + dc] = symbol
 	
 	def can_move(self, dr, dc, push=False):
-		"""Check whether player can move to an adjacent location, with or without
-		being allowed to push a box.
+		"""Check whether player can move to an adjacent location, with or 
+		without being allowed to push a box.
 		"""
-		next = self.get_rel(dr, dc)
-		if is_free(next):
+		next_ = self.get_rel(dr, dc)
+		if is_free(next_):
 			return True
-		elif push and is_box(next):
+		elif push and is_box(next_):
 			return is_free(self.get_rel(2 * dr, 2 * dc))
 		return False
 	
@@ -123,12 +123,12 @@ class SokobanGame:
 		"""
 		if self.can_move(dr, dc, push):
 			cur = self.get_rel(0, 0)
-			next = self.get_rel(dr, dc)
+			next_ = self.get_rel(dr, dc)
 			self.set_rel(0, 0, FLOOR_GOAL if is_goal(cur) else FLOOR)
-			self.set_rel(dr, dc, PLAYER_GOAL if is_goal(next) else PLAYER)
-			if push and is_box(next):
-				nextnext = self.get_rel(2 * dr, 2 * dc)
-				self.set_rel(2 * dr, 2 * dc, BOX_GOAL if is_goal(nextnext) else BOX)
+			self.set_rel(dr, dc, PLAYER_GOAL if is_goal(next_) else PLAYER)
+			if push and is_box(next_):
+				next_next = self.get_rel(2 * dr, 2 * dc)
+				self.set_rel(2 * dr, 2 * dc, BOX_GOAL if is_goal(next_next) else BOX)
 			self.r += dr
 			self.c += dc
 			self.progress.append((dr, dc))
@@ -148,7 +148,7 @@ class SokobanGame:
 			visited.add((r, c))
 			if (r, c) == (row, col):
 				return path
-			for dr, dc in ((0,+1), (0,-1), (-1,0), (+1,0)):
+			for dr, dc in ((0, +1), (0, -1), (-1, 0), (+1, 0)):
 				if is_free(self.state[r + dr][c + dc]):
 					queue.append((r + dr, c + dc, path + [(dr, dc)]))
 		return None
@@ -183,7 +183,7 @@ class SokobanGame:
 			self.r, self.c = original_position
 			self.replay(path, False)
 		
-			for dr, dc in ((0,+1), (0,-1), (-1,0), (+1,0)):
+			for dr, dc in ((0, +1), (0, -1), (-1, 0), (+1, 0)):
 				target = self.state[r + dr][c + dc]
 				if is_free(target) or is_player(target):
 					positioning = self.find_path(r - dr, c - dc)
@@ -218,5 +218,6 @@ class SokobanGame:
 if __name__ == "__main__":
 	levels = load_levels("levels/microban.txt")
 	print "Number of levels:", len(levels)
-	for line in levels[0]: print line
+	for line in levels[0]:
+		print line
 	print SokobanGame(levels)
