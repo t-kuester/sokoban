@@ -53,6 +53,11 @@ def load_levels(filename):
 
 		return tuple(map(tuple, filter(None, levels)))
 
+def listify(list_of_lists):
+	return list(map(list, list_of_lists))
+	
+def tuplefy(list_of_lists):
+	return tuple(map(tuple, list_of_lists))
 
 class SokobanGame:
 	"""Class representing the current state of the Sokoban game.
@@ -74,7 +79,7 @@ class SokobanGame:
 		If no number is given, reload the current level.
 		"""
 		self.number = number if number is not None else self.number
-		self.state = map(list, self.levels[self.number % len(self.levels)])
+		self.state = listify(self.levels[self.number % len(self.levels)])
 		self.progress = []
 		self.r = self.c = 0
 		for r, row in enumerate(self.state):
@@ -87,7 +92,7 @@ class SokobanGame:
 	def save(self):
 		"""Save current state of the game.
 		"""
-		self.backup = map(list, self.state), self.r, self.c, list(self.progress)
+		self.backup = listify(self.state), self.r, self.c, list(self.progress)
 		
 	def load(self):
 		"""Restore previously saved game state.
@@ -161,7 +166,7 @@ class SokobanGame:
 		efficient, but fast enough, simple and robust. Positioning of the player
 		is done using the basic movement planning algorithm.
 		"""
-		original_state = tuple(map(tuple, self.state))
+		original_state = tuplefy(self.state)
 		original_position = self.r, self.c
 		original_progress = list(self.progress)
 
@@ -179,7 +184,7 @@ class SokobanGame:
 				result = path
 				break
 			
-			self.state = map(list, original_state)
+			self.state = listify(original_state)
 			self.r, self.c = original_position
 			self.replay(path, False)
 		
@@ -190,7 +195,7 @@ class SokobanGame:
 					if positioning is not None:
 						queue.append(((r + dr, c + dc), path + positioning + [(dr, dc)]))
 
-		self.state = map(list, original_state)
+		self.state = listify(original_state)
 		self.r, self.c = original_position
 		self.progress = original_progress
 		return result
@@ -217,7 +222,7 @@ class SokobanGame:
 # testing	
 if __name__ == "__main__":
 	levels = load_levels("levels/microban.txt")
-	print "Number of levels:", len(levels)
+	print("Number of levels:", len(levels))
 	for line in levels[0]:
-		print line
-	print SokobanGame(levels)
+		print(line)
+	print(SokobanGame(levels))

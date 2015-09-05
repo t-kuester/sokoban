@@ -21,7 +21,7 @@ Controls:
 """
 
 import sokoban
-import Tkinter as tk
+import tkinter as tk
 import json
 
 DIRECTIONS = {"Right": (0, +1), "Left": (0, -1), "Up": (-1, 0), "Down": (+1, 0)}
@@ -94,8 +94,8 @@ class SokobanFrame(tk.Frame):
 		"""Handle mouse events for planning movement and box-pushing,
 		"""
 		w = self.get_cellwidth()
-		r, c = event.y / w, event.x / w
-		
+		r, c = int(event.y // w), int(event.x // w)
+		print(r,c)
 		try:
 			symbol = self.game.state[r][c]
 			if sokoban.is_box(symbol):
