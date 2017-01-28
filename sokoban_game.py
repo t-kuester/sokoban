@@ -127,10 +127,11 @@ class SokobanFrame(tk.Frame):
 		"""
 		num = self.game.number
 		solved = self.game.check_solved()
+		num_solved = sum(x is not None for x in self.scores)
 		turns = len(self.game.progress)
 		if solved and (self.scores[num] is None or turns < self.scores[num]):
 			self.scores[num] = turns
-		status = "%d/%d, %d Steps (Best: %r)" % (num + 1, 
+		status = "%d, %d/%d, %d Steps (Best: %r)" % (num + 1, num_solved,
 				len(self.game.levels), turns, self.scores[num])
 		history = " ".join(DIRECTIONS_INV[d][0] for d in self.game.progress[-30:])
 		self.status.configure(text=status)
