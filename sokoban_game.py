@@ -95,7 +95,6 @@ class SokobanFrame(tk.Frame):
 		"""
 		w = self.get_cellwidth()
 		r, c = int(event.y // w), int(event.x // w)
-		print(r,c)
 		try:
 			symbol = self.game.state[r][c]
 			if sokoban.is_box(symbol):
