@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 # -*- coding: utf8 -*-
 
 """
@@ -215,7 +215,8 @@ class SokobanGame:
 		               for row in self.state for symbol in row)
 	
 	def __str__(self):
-		"""Create simple string representation of the game state."""
+		"""Create simple string representation of the game state.
+		"""
 		return "SokobanGame(level: %d/%d, position: %r, progress: %r)" % \
 				(self.number, len(self.levels), (self.r, self.c), self.progress)
 

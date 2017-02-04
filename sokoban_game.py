@@ -167,25 +167,39 @@ class SokobanFrame(tk.Frame):
 		           width  / max(map(len, self.game.state)))
 
 
-if __name__ == "__main__":
+def main():
+	"""Load high scores, select level file, start game, save scores.
+	"""
 	import optparse
 	parser = optparse.OptionParser("sokoban_game.py [level file]")
 	(options, args) = parser.parse_args()
-	
-	# load level file given as parameter
-	levelfile = (args or ["levels/masmicroban.txt"])[0]
-	levels = sokoban.load_levels(levelfile)
-	
-	#load highscores for level file
+
+	# load highscores for level file
 	savesfile = "sokoban_saves.json"
 	try:
 		with open(savesfile) as f:
 			gamestate = json.load(f)
 	except IOError:
 		gamestate = {}
-	scores = gamestate.get(levelfile, [None] * len(levels))
+	
+	# load level file given as parameter, or select from saves
+	levelfile = None
+	if args:
+		levelfile = args[0]
+	elif gamestate:
+		for n, (levelset, scores) in enumerate(sorted(gamestate.items())):
+			solved = sum(s is not None for s in scores)
+			print("%d %3d/%3d %s" % (n, solved, len(scores), levelset))
+		selection = input("Select level set: ")
+		if selection.isdigit() and int(selection) < n:
+			levelfile = sorted(gamestate)[int(selection)]
+	if levelfile is None:
+		parser.print_help()
+		exit()
 
 	# start game
+	levels = sokoban.load_levels(levelfile)
+	scores = gamestate.get(levelfile, [None] * len(levels))
 	game = sokoban.SokobanGame(levels)
 	frame = SokobanFrame(game, scores)
 	frame.mainloop()
@@ -194,3 +208,6 @@ if __name__ == "__main__":
 	gamestate[levelfile] = scores
 	with open(savesfile, 'w') as f:
 		json.dump(gamestate, f)
+
+if __name__ == "__main__":
+	main()
