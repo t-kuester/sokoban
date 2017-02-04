@@ -95,7 +95,6 @@ class SokobanFrame(tk.Frame):
 	def handle_mouse(self, event):
 		"""Handle mouse events for planning movement and box-pushing,
 		"""
-		self.path = None
 		w = self.get_cellwidth()
 		r, c = int(event.y // w), int(event.x // w)
 		try:
@@ -174,7 +173,9 @@ def main():
 	"""Load high scores, select level file, start game, save scores.
 	"""
 	import optparse
-	parser = optparse.OptionParser("sokoban_game.py [level file]")
+	parser = optparse.OptionParser("sokoban_game.py [options]")
+	parser.add_option("-m", dest="show_menu", help="show level menu", action="store_true")
+	parser.add_option("-f", dest="levelfile", help="select level file")
 	(options, args) = parser.parse_args()
 
 	# load highscores for level file
@@ -187,17 +188,21 @@ def main():
 	
 	# load level file given as parameter, or select from saves
 	levelfile = None
-	if args:
-		levelfile = args[0]
-	elif gamestate:
-		for n, (levelset, scores) in enumerate(sorted(gamestate.items())):
+	if options.levelfile:
+		levelfile = options.levelfile
+	elif options.show_menu and gamestate:
+		for n, (levelset, scores) in enumerate(sorted(gamestate.items()), start=1):
 			solved = sum(s is not None for s in scores)
-			print("%d %3d/%3d %s" % (n, solved, len(scores), levelset))
+			complete = "*" if solved == len(scores) else " "
+			print("%2d %3d/%3d %s %s" % (n, solved, len(scores), complete, levelset))
 		selection = input("Select level set: ")
-		if selection.isdigit() and int(selection) <= n:
-			levelfile = sorted(gamestate)[int(selection)]
-	if levelfile is None:
+		if selection.isdigit() and 0 < int(selection) <= n:
+			levelfile = sorted(gamestate)[int(selection) - 1]
+	elif options.show_menu:
+		print("No levels known; use -f to load level file.")
+	else:
 		parser.print_help()
+	if levelfile is None:
 		exit()
 
 	# start game
