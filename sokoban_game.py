@@ -45,6 +45,7 @@ class SokobanFrame(tk.Frame):
 		self.pack(fill=tk.BOTH, expand=tk.YES)
 		
 		self.selected = None
+		self.path = None
 
 		self.canvas = tk.Canvas(self)
 		self.canvas.pack(side=tk.TOP, fill=tk.BOTH, expand=tk.YES)
@@ -64,6 +65,7 @@ class SokobanFrame(tk.Frame):
 	def handle_keys(self, event, shift=False):
 		"""Handle key events, e.g. or movement, save, load, undo, restart, etc.
 		"""
+		self.path = None
 		self.selected = None
 		if event.keysym == "q":
 			self.quit()
@@ -93,6 +95,7 @@ class SokobanFrame(tk.Frame):
 	def handle_mouse(self, event):
 		"""Handle mouse events for planning movement and box-pushing,
 		"""
+		self.path = None
 		w = self.get_cellwidth()
 		r, c = int(event.y // w), int(event.x // w)
 		try:
@@ -101,24 +104,24 @@ class SokobanFrame(tk.Frame):
 				self.selected = (r, c)
 			if sokoban.is_free(symbol) or sokoban.is_player(symbol):
 				if self.selected is None:
-					path = self.game.find_path(r, c)
-					self.move_path(path, False)
+					self.path = self.game.find_path(r, c)
+					self.move_path()
 				else:
-					path = self.game.plan_push(self.selected, (r, c))
-					self.move_path(path, True)
+					self.path = self.game.plan_push(self.selected, (r, c))
+					self.move_path()
 				self.selected = None
 			self.update_state()
 		except IndexError:
 			pass
 
-	def move_path(self, path, push):
-		"""Move one step in the given path, then wait a short time, repaint, and
-		continue.
+	def move_path(self):
+		"""Move one step in the given path, then wait a short time,
+		repaint, and continue.
 		"""
-		if path:
-			dr, dc = path[0]
-			self.game.move(dr, dc, push)
-			self.after(25, self.move_path, path[1:], push)
+		if self.path:
+			dr, dc = self.path.pop(0)
+			self.game.move(dr, dc, True)
+			self.after(25, self.move_path)
 		self.update_state()
 
 	def update_state(self):
@@ -191,7 +194,7 @@ def main():
 			solved = sum(s is not None for s in scores)
 			print("%d %3d/%3d %s" % (n, solved, len(scores), levelset))
 		selection = input("Select level set: ")
-		if selection.isdigit() and int(selection) < n:
+		if selection.isdigit() and int(selection) <= n:
 			levelfile = sorted(gamestate)[int(selection)]
 	if levelfile is None:
 		parser.print_help()
