@@ -171,14 +171,14 @@ class SokobanGame:
 		original_progress = list(self.progress)
 
 		result = None
-		queue = collections.deque([(start, [])])
+		queue = collections.deque([(start, (self.r, self.c), [])])
 		visited = set()
 		while queue:
-			(r, c), path = queue.popleft()
+			(r, c), pos, path = queue.popleft()
 
-			if (r, c) in visited:
+			if ((r, c), pos) in visited:
 				continue
-			visited.add((r, c))
+			visited.add(((r, c), pos))
 
 			if (r, c) == goal:
 				result = path
@@ -193,7 +193,7 @@ class SokobanGame:
 				if is_free(target) or is_player(target):
 					positioning = self.find_path(r - dr, c - dc)
 					if positioning is not None:
-						queue.append(((r + dr, c + dc), path + positioning + [(dr, dc)]))
+						queue.append(((r + dr, c + dc), (r, c), path + positioning + [(dr, dc)]))
 
 		self.state = listify(original_state)
 		self.r, self.c = original_position
