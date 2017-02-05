@@ -97,6 +97,7 @@ class SokobanFrame(tk.Frame):
 		"""
 		w = self.get_cellwidth()
 		r, c = int(event.y // w), int(event.x // w)
+		move_fast = event.num == 3 # RMB -> move fast
 		try:
 			symbol = self.game.state[r][c]
 			if sokoban.is_box(symbol):
@@ -104,23 +105,28 @@ class SokobanFrame(tk.Frame):
 			if sokoban.is_free(symbol) or sokoban.is_player(symbol):
 				if self.selected is None:
 					self.path = self.game.find_path(r, c)
-					self.move_path()
+					self.move_path(move_fast)
 				else:
 					self.path = self.game.plan_push(self.selected, (r, c))
-					self.move_path()
+					self.move_path(move_fast)
 				self.selected = None
 			self.update_state()
 		except IndexError:
 			pass
 
-	def move_path(self):
+	def move_path(self, instant=False):
 		"""Move one step in the given path, then wait a short time,
-		repaint, and continue.
+		repaint, and continue. If 'instant' parameter is True, then move
+		instantly, to save time and prevent max. recursion limit.
 		"""
 		if self.path:
-			dr, dc = self.path.pop(0)
-			self.game.move(dr, dc, True)
-			self.after(25, self.move_path)
+			if instant:
+				self.game.replay(self.path, False)
+				self.path = []
+			else:
+				dr, dc = self.path.pop(0)
+				self.game.move(dr, dc, True)
+				self.after(25, self.move_path)
 		self.update_state()
 
 	def update_state(self):
