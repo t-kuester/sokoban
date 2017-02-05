@@ -59,6 +59,35 @@ def listify(list_of_lists):
 def tuplefy(list_of_lists):
 	return tuple(map(tuple, list_of_lists))
 
+def set_state(state, position, symbol):
+	row, col = position
+	state[row][col] = symbol
+
+def find_path(state, start, goal):
+	"""Try to find a path from start to goal in the given state. This is
+	a more general version of SokobanGame.find_path, that can also be
+	applied for "future" states in SokobanGame.plan_push.
+	"""
+	# initialize queue and set of visited states
+	queue = collections.deque([(start, [])])
+	visited = set()
+
+	while queue:
+		# pop state, check whether already visited or goal
+		(r, c), path = queue.popleft()
+		if (r, c) in visited:
+			continue
+		visited.add((r, c))
+		if (r, c) == goal:
+			return path
+
+		# expand neighbor states
+		for dr, dc in ((0, +1), (0, -1), (-1, 0), (+1, 0)):
+			if is_free(state[r + dr][c + dc]):
+				queue.append(((r + dr, c + dc), path + [(dr, dc)]))
+	return None
+
+
 class SokobanGame:
 	"""Class representing the current state of the Sokoban game.
 	
@@ -142,38 +171,25 @@ class SokobanGame:
 			return False
 
 	def find_path(self, row, col):
-		"""Try to find a path to (row, col), without moving boxes, using BFS.
+		"""Try to find a path from the current player position to the
+		given row and col, without moving boxes.
 		"""
-		queue = collections.deque([(self.r, self.c, [])])
-		visited = set()
-		while queue:
-			(r, c, path) = queue.popleft()
-			if (r, c) in visited:
-				continue
-			visited.add((r, c))
-			if (r, c) == (row, col):
-				return path
-			for dr, dc in ((0, +1), (0, -1), (-1, 0), (+1, 0)):
-				if is_free(self.state[r + dr][c + dc]):
-					queue.append((r + dr, c + dc, path + [(dr, dc)]))
-		return None
-	
+		return find_path(self.state, (self.r, self.c), (row, col))
+
 	def plan_push(self, start, goal):
 		"""Plan how to push box from start to goal position. Planning is done
 		using the same basic breadth-first-search as for movement planning, 
 		except that we have to keep track of the actual game state, which is 
-		done by simply replaying the so-far path in each step. Not terribly
-		efficient, but fast enough, simple and robust. Positioning of the player
+		done by updating the original state. Positioning of the player
 		is done using the basic movement planning algorithm.
 		"""
+		# create copy of state, initialize queue and visited states
 		original_state = tuplefy(self.state)
-		original_position = self.r, self.c
-		original_progress = list(self.progress)
-
-		result = None
 		queue = collections.deque([(start, (self.r, self.c), [])])
 		visited = set()
+
 		while queue:
+			# pop state, check whether already visited or goal state
 			(r, c), pos, path = queue.popleft()
 
 			if ((r, c), pos) in visited:
@@ -181,24 +197,22 @@ class SokobanGame:
 			visited.add(((r, c), pos))
 
 			if (r, c) == goal:
-				result = path
-				break
-			
-			self.state = listify(original_state)
-			self.r, self.c = original_position
-			self.replay(path, False)
-		
+				return path
+
+			# update state with new player and box positions
+			state = listify(original_state)
+			set_state(state, (self.r, self.c), FLOOR)
+			set_state(state, start, FLOOR)
+			set_state(state, (r, c), BOX)
+
+			# expand neighbor states
 			for dr, dc in ((0, +1), (0, -1), (-1, 0), (+1, 0)):
-				target = self.state[r + dr][c + dc]
+				target = state[r + dr][c + dc]
 				if is_free(target) or is_player(target):
-					positioning = self.find_path(r - dr, c - dc)
+					positioning = find_path(state, pos, (r - dr, c - dc))
 					if positioning is not None:
 						queue.append(((r + dr, c + dc), (r, c), path + positioning + [(dr, dc)]))
-
-		self.state = listify(original_state)
-		self.r, self.c = original_position
-		self.progress = original_progress
-		return result
+		return None
 	
 	def replay(self, steps, reset):
 		"""Resets the game state and replay the moves given in the list.
