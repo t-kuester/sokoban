@@ -12,6 +12,7 @@ for path planning and for planning to push a box to a given location.
 """
 
 import collections
+import heapq
 
 WALL        = '#'
 PLAYER      = '@'
@@ -62,6 +63,10 @@ def tuplefy(list_of_lists):
 def set_state(state, position, symbol):
 	row, col = position
 	state[row][col] = symbol
+
+def distance(start, goal):
+	(sr, sc), (gr, gc) = start, goal
+	return abs(sr - gr) + abs(sc - gc)
 
 def find_path(state, start, goal):
 	"""Try to find a path from start to goal in the given state. This is
@@ -177,20 +182,21 @@ class SokobanGame:
 		return find_path(self.state, (self.r, self.c), (row, col))
 
 	def plan_push(self, start, goal):
-		"""Plan how to push box from start to goal position. Planning is done
-		using the same basic breadth-first-search as for movement planning, 
-		except that we have to keep track of the actual game state, which is 
-		done by updating the original state. Positioning of the player
-		is done using the basic movement planning algorithm.
+		"""Plan how to push box from start to goal position. Planning is
+		done using A* planning, taking the players movements into account.
+		We also have to keep track of the actual game state, updating
+		the original state. Positioning of the player is done using the
+		basic movement planning algorithm.
 		"""
 		# create copy of state, initialize queue and visited states
 		original_state = tuplefy(self.state)
-		queue = collections.deque([(start, (self.r, self.c), [])])
+		g, h = 0, distance(start, goal)
+		queue = [((g+h, h), start, (self.r, self.c), [])]
 		visited = set()
 
 		while queue:
 			# pop state, check whether already visited or goal state
-			(r, c), pos, path = queue.popleft()
+			_, (r, c), pos, path = heapq.heappop(queue)
 
 			if ((r, c), pos) in visited:
 				continue
@@ -211,7 +217,10 @@ class SokobanGame:
 				if is_free(target) or is_player(target):
 					positioning = find_path(state, pos, (r - dr, c - dc))
 					if positioning is not None:
-						queue.append(((r + dr, c + dc), (r, c), path + positioning + [(dr, dc)]))
+						new_pos = (r + dr, c + dc)
+						g = len(path) + len(positioning) + 1
+						h = distance(new_pos, goal)
+						heapq.heappush(queue, ((g+h, h), new_pos, (r, c), path + positioning + [(dr, dc)]))
 		return None
 	
 	def replay(self, steps, reset):
