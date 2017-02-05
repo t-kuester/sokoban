@@ -34,11 +34,11 @@ class SokobanFrame(tk.Frame):
 	keyboard and mouse control, loading level sets, undo, etc.
 	"""
 	
-	def __init__(self, game, scores):
+	def __init__(self, master, game, scores):
 		"""Create new Sokoban Frame instance, using a given game instance and
 		a dictionary holding the scores for the individual levels.
 		"""
-		tk.Frame.__init__(self, None)
+		tk.Frame.__init__(self, master)
 		self.master.title("Sokoban")
 		self.game = game
 		self.scores = scores
@@ -209,8 +209,10 @@ def main():
 	levels = sokoban.load_levels(levelfile)
 	scores = gamestate.get(levelfile, [None] * len(levels))
 	game = sokoban.SokobanGame(levels)
-	frame = SokobanFrame(game, scores)
-	frame.mainloop()
+	root = tk.Tk()
+	root.geometry("640x480")
+	SokobanFrame(root, game, scores)
+	root.mainloop()
 
 	# save highscores
 	gamestate[levelfile] = scores
