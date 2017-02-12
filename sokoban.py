@@ -48,7 +48,8 @@ def load_levels(filename):
 		levels = [[]]
 		for line in levelfile:
 			if line.lstrip().startswith(WALL):
-				levels[-1].append(line)
+				# remove trailing whitespace, but not beginning!
+				levels[-1].append(line.rstrip())
 			elif levels[-1]:
 				levels.append([])
 
