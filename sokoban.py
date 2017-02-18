@@ -2,7 +2,7 @@
 # -*- coding: utf8 -*-
 
 """
-Sokoban Game Model, by Tobias Kuester, 2014
+Sokoban Game Model, by Tobias Kuester, 2014-2017
 
 This modules provides a class encapsulating the current state of the Sokoban 
 game as well as some helper methods for loading game files and other stuff.

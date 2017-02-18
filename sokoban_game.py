@@ -2,20 +2,20 @@
 # -*- coding: utf8 -*-
 
 """
-Simple Sokoban Game, by Tobias Küster, 2014
+Simple Sokoban Game, by Tobias Küster, 2014-2017
 
 Features:
 - load Sokoban levels in standard sokoban level file format
 - save progress (solved/unsolved, number of turns) for each level in JSON file
 - controls with arrow-keys or with mouse
-- save/restore snapshot of current level, undo-stack
+- save/restore snapshot of current level, undo/redo-stack
 - path-planning for movement and push-planning for pushing single boxes
 
 Controls:
 - Arrow Keys: Move/Push
-- Mouse Click: Fast-move, push-planning
-- q: quit, r: reload level, u: undo
-- s: save snapshot, l: load snapshot
+- Mouse Click: Fast-move, push-planning (RMB: move instantaneous)
+- Mouse Wheel up/down: undo/redo
+- q: quit, r: reload level, s: save snapshot, l: load snapshot
 - PgUp/PgDn: Next/Previous Level
 - Shift + PgUp/PgDn: Next/Previous unsolved Level (if any)
 """
@@ -46,6 +46,7 @@ class SokobanFrame(tk.Frame):
 		
 		self.selected = None
 		self.path = None
+		self.redo = []
 
 		self.canvas = tk.Canvas(self)
 		self.canvas.pack(side=tk.TOP, fill=tk.BOTH, expand=tk.YES)
@@ -71,9 +72,6 @@ class SokobanFrame(tk.Frame):
 			self.quit()
 		if event.keysym == "r":
 			self.game.load_level()
-		if event.keysym == "u":
-			steps = self.game.progress[:-1]
-			self.game.replay(steps, True)
 		if event.keysym == "s":
 			self.game.save()
 		if event.keysym == "l":
@@ -95,24 +93,35 @@ class SokobanFrame(tk.Frame):
 	def handle_mouse(self, event):
 		"""Handle mouse events for planning movement and box-pushing,
 		"""
-		w = self.get_cellwidth()
-		r, c = int(event.y // w), int(event.x // w)
-		move_fast = event.num == 3 # RMB -> move fast
-		try:
-			symbol = self.game.state[r][c]
-			if sokoban.is_box(symbol):
-				self.selected = (r, c)
-			if sokoban.is_free(symbol) or sokoban.is_player(symbol):
-				if self.selected is None:
-					self.path = self.game.find_path(r, c)
-					self.move_path(move_fast)
-				else:
-					self.path = self.game.plan_push(self.selected, (r, c))
-					self.move_path(move_fast)
-				self.selected = None
-			self.update_state()
-		except IndexError:
-			pass
+		if event.num in (4, 5):
+			# mouse wheel: undo/redo
+			if event.num == 4 and self.game.progress:
+				self.redo.append(self.game.progress.pop())
+				self.game.replay(self.game.progress, True)
+			if event.num == 5 and self.redo:
+				dr, dc = self.redo.pop()
+				self.game.move(dr, dc, True)
+
+		if event.num in (1, 3):
+			# left/right mouse button: move/push
+			w = self.get_cellwidth()
+			r, c = int(event.y // w), int(event.x // w)
+			move_fast = event.num == 3 # RMB -> move fast
+			try:
+				symbol = self.game.state[r][c]
+				if sokoban.is_box(symbol):
+					self.selected = (r, c)
+				if sokoban.is_free(symbol) or sokoban.is_player(symbol):
+					if self.selected is None:
+						self.path = self.game.find_path(r, c)
+						self.move_path(move_fast)
+					else:
+						self.path = self.game.plan_push(self.selected, (r, c))
+						self.move_path(move_fast)
+					self.selected = None
+			except IndexError:
+				pass
+		self.update_state()
 
 	def move_path(self, instant=False):
 		"""Move one step in the given path, then wait a short time,
@@ -179,7 +188,9 @@ def main():
 	"""Load high scores, select level file, start game, save scores.
 	"""
 	import optparse
-	parser = optparse.OptionParser("sokoban_game.py [options]")
+	fmt = optparse.IndentedHelpFormatter()
+	fmt.format_description = lambda desc: desc.strip() + "\n"
+	parser = optparse.OptionParser("sokoban_game.py [options]", formatter=fmt, description=__doc__)
 	parser.add_option("-m", dest="show_menu", help="show level menu", action="store_true")
 	parser.add_option("-f", dest="levelfile", help="select level file")
 	(options, args) = parser.parse_args()
