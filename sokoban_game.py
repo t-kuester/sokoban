@@ -82,8 +82,10 @@ class SokobanFrame(tk.Frame):
 			# shift: fast-forward to next unsolved level, if any
 			while shift and self.scores[number] and number != self.game.number:
 				number = inc(number)
+			self.redo = []
 			self.game.load_level(number )
 		if event.keysym in DIRECTIONS:
+			self.redo = []
 			dr, dc = DIRECTIONS[event.keysym]
 			while self.game.move(dr, dc, not shift) and shift:
 				# self.after(20, self.handle_keys, event, shift)
@@ -112,6 +114,7 @@ class SokobanFrame(tk.Frame):
 				if sokoban.is_box(symbol):
 					self.selected = (r, c)
 				if sokoban.is_free(symbol) or sokoban.is_player(symbol):
+					self.redo = []
 					if self.selected is None:
 						self.path = self.game.find_path(r, c)
 						self.move_path(move_fast)
