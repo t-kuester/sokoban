@@ -14,7 +14,7 @@ Features:
 Controls:
 - Arrow Keys: Move/Push
 - Mouse Click: Fast-move, push-planning (RMB: move instantaneous)
-- Mouse Wheel up/down: undo/redo
+- Mouse Wheel up/down: undo/redo (also: z/y keys)
 - q: quit, r: reload level, s: save snapshot, l: load snapshot
 - PgUp/PgDn: Next/Previous Level
 - Shift + PgUp/PgDn: Next/Previous unsolved Level (if any)
@@ -25,7 +25,8 @@ import tkinter as tk
 import json
 
 DIRECTIONS = {"Right": (0, +1), "Left": (0, -1), "Up": (-1, 0), "Down": (+1, 0)}
-DIRECTIONS_INV = dict((v, k) for (k, v) in DIRECTIONS.items())
+DIRECTIONS_INV = {(0, +1, 1): "R", (0, -1, 1): "L", (-1, 0, 1): "U", (+1, 0, 1): "D",
+                  (0, +1, 0): "r", (0, -1, 0): "l", (-1, 0, 0): "u", (+1, 0, 0): "d"}
 
 class SokobanFrame(tk.Frame):
 	"""Sokoban Game Frame.
@@ -76,6 +77,10 @@ class SokobanFrame(tk.Frame):
 			self.game.save()
 		if event.keysym == "l":
 			self.game.load()
+		if event.keysym == "z" and self.game.progress:
+			self.redo.append(self.game.undo())
+		if event.keysym == "y" and self.undo:
+			self.game.move(*self.redo.pop())
 		if event.keysym in ("Prior", "Next"):
 			inc = lambda num: (num +1 if event.keysym == "Next" else num-1) % len(self.game.levels)
 			number = inc(self.game.number)
@@ -98,11 +103,9 @@ class SokobanFrame(tk.Frame):
 		if event.num in (4, 5):
 			# mouse wheel: undo/redo
 			if event.num == 4 and self.game.progress:
-				self.redo.append(self.game.progress.pop())
-				self.game.replay(self.game.progress, True)
+				self.redo.append(self.game.undo())
 			if event.num == 5 and self.redo:
-				dr, dc = self.redo.pop()
-				self.game.move(dr, dc, True)
+				self.game.move(*self.redo.pop())
 
 		if event.num in (1, 3):
 			# left/right mouse button: move/push
@@ -136,8 +139,8 @@ class SokobanFrame(tk.Frame):
 				self.game.replay(self.path, False)
 				self.path = []
 			else:
-				dr, dc = self.path.pop(0)
-				self.game.move(dr, dc, True)
+				dr, dc, push = self.path.pop(0)
+				self.game.move(dr, dc, push)
 				self.after(25, self.move_path)
 		self.update_state()
 
@@ -153,7 +156,7 @@ class SokobanFrame(tk.Frame):
 			self.scores[num] = turns
 		status = "%d, %d/%d, %d Steps (Best: %r)" % (num + 1, num_solved,
 				len(self.game.levels), turns, self.scores[num])
-		history = " ".join(DIRECTIONS_INV[d][0] for d in self.game.progress[-30:])
+		history = " ".join(DIRECTIONS_INV[d] for d in self.game.progress[-30:])
 		self.status.configure(text=status)
 		self.history.configure(text=history)
 		self.draw_state()

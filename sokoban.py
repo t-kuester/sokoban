@@ -90,7 +90,7 @@ def find_path(state, start, goal):
 		# expand neighbor states
 		for dr, dc in ((0, +1), (0, -1), (-1, 0), (+1, 0)):
 			if is_free(state[r + dr][c + dc]):
-				queue.append(((r + dr, c + dc), path + [(dr, dc)]))
+				queue.append(((r + dr, c + dc), path + [(dr, dc, False)]))
 	return None
 
 
@@ -171,10 +171,28 @@ class SokobanGame:
 				self.set_rel(2 * dr, 2 * dc, BOX_GOAL if is_goal(next_next) else BOX)
 			self.r += dr
 			self.c += dc
-			self.progress.append((dr, dc))
+			self.progress.append((dr, dc, is_box(next_)))
 			return True
 		else:
 			return False
+
+	def undo(self):
+		"""Undo last step from game's progress, moving the player to the
+		previous position and "pulling" the crate, if previously pushed,
+		back to the player's current position.
+		"""
+		dr, dc, push = self.progress.pop()
+		cur = self.get_rel(0, 0)
+		prev = self.get_rel(-dr, -dc)
+		next_ = self.get_rel(dr, dc)
+		self.set_rel(0, 0, FLOOR_GOAL if is_goal(cur) else FLOOR)
+		self.set_rel(-dr, -dc, PLAYER_GOAL if is_goal(prev) else PLAYER)
+		if push and is_box(next_):
+			self.set_rel(0, 0, BOX_GOAL if is_goal(cur) else BOX)
+			self.set_rel(dr, dc, FLOOR_GOAL if is_goal(next_) else FLOOR)
+		self.r -= dr
+		self.c -= dc
+		return (dr, dc, push)
 
 	def find_path(self, row, col):
 		"""Try to find a path from the current player position to the
@@ -221,7 +239,7 @@ class SokobanGame:
 						new_pos = (r + dr, c + dc)
 						g = len(path) + len(positioning) + 1
 						h = distance(new_pos, goal)
-						heapq.heappush(queue, ((g+h, h), new_pos, (r, c), path + positioning + [(dr, dc)]))
+						heapq.heappush(queue, ((g+h, h), new_pos, (r, c), path + positioning + [(dr, dc, True)]))
 		return None
 	
 	def replay(self, steps, reset):
@@ -229,8 +247,8 @@ class SokobanGame:
 		"""
 		if reset:
 			self.load_level()
-		for dr, dc in steps:
-			self.move(dr, dc, True)
+		for dr, dc, push in steps:
+			self.move(dr, dc, push)
 			
 	def check_solved(self):
 		"""Check whether all goal tiles have a box placed on them.
