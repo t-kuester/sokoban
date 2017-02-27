@@ -23,6 +23,8 @@ FLOOR_GOAL  = '.'
 FLOOR       = ' '
 COMMENT     = ';'
 
+DIRECTIONS = ((0, +1), (0, -1), (-1, 0), (+1, 0))
+
 
 def is_goal(symbol):
 	"""return whether the given symbol represents a goal tile"""
@@ -69,6 +71,11 @@ def distance(start, goal):
 	(sr, sc), (gr, gc) = start, goal
 	return abs(sr - gr) + abs(sc - gc)
 
+def check_add(set_, element):
+	"""Add to set and return True iff not already in the set."""
+	return not(element in set_ or set_.add(element))
+
+
 def find_path(state, start, goal):
 	"""Try to find a path from start to goal in the given state. This is
 	a more general version of SokobanGame.find_path, that can also be
@@ -81,17 +88,45 @@ def find_path(state, start, goal):
 	while queue:
 		# pop state, check whether already visited or goal
 		(r, c), path = queue.popleft()
-		if (r, c) in visited:
-			continue
-		visited.add((r, c))
 		if (r, c) == goal:
 			return path
 
 		# expand neighbor states
-		for dr, dc in ((0, +1), (0, -1), (-1, 0), (+1, 0)):
-			if is_free(state[r + dr][c + dc]):
-				queue.append(((r + dr, c + dc), path + [(dr, dc, False)]))
+		queue.extend(((r + dr, c + dc), path + [(dr, dc, False)])
+				for dr, dc in DIRECTIONS
+				if is_free(state[r + dr][c + dc]) and check_add(visited, (r+dr, c+dc)))
 	return None
+
+def find_deadends(level):
+	"""Find all (most of) the "dead end" positions where block can not be
+	moved out of again. Those position are then highlighted in the game
+	and also prohibited from being visited by the push-planner, making it
+	both more safe and (on some maps) a good deal faster.
+	This does not automatically set SokobanGame.deadends, though.
+	"""
+	# find all goal tiles
+	goals = [(r, c) for r, row in enumerate(level)
+	                for c, sym in enumerate(row) if is_goal(sym)]
+
+	# step 1: find reachable floor
+	queue = collections.deque(goals)
+	floor = set()
+	while queue:
+		(r, c) = queue.popleft()
+		queue.extend((r+dr, c+dc) for dr, dc in DIRECTIONS
+				if level[r+dr][c+dc] != WALL and check_add(floor, (r+dr, c+dc)))
+
+	# step 2: find floor reachable with one buffer to next wall
+	queue = collections.deque(goals)
+	visited = set(goals)
+	while queue:
+		(r, c) = queue.popleft()
+		for dr, dc in DIRECTIONS:
+			if level[r+dr][c+dc] != WALL and level[r+2*dr][c+2*dc] != WALL and check_add(visited, (r+dr, c+dc)):
+				queue.append((r+dr, c+dc))
+
+	# difference of the above are the dead-ends and forbidden areas
+	return floor - visited
 
 
 class SokobanGame:
@@ -108,11 +143,13 @@ class SokobanGame:
 		self.number = 0
 		self.load_level()
 		self.backup = None
+		self.deadends = set()
 		
 	def load_level(self, number=None):
 		"""Load level with given number from current level set.
 		If no number is given, reload the current level.
 		"""
+		self.deadends = set()
 		self.number = number if number is not None else self.number
 		self.state = listify(self.levels[self.number % len(self.levels)])
 		self.progress = []
@@ -217,9 +254,8 @@ class SokobanGame:
 			# pop state, check whether already visited or goal state
 			_, (r, c), pos, path = heapq.heappop(queue)
 
-			if ((r, c), pos) in visited:
+			if not check_add(visited, ((r, c), pos)):
 				continue
-			visited.add(((r, c), pos))
 
 			if (r, c) == goal:
 				return path
@@ -231,9 +267,9 @@ class SokobanGame:
 			set_state(state, (r, c), BOX)
 
 			# expand neighbor states
-			for dr, dc in ((0, +1), (0, -1), (-1, 0), (+1, 0)):
+			for dr, dc in DIRECTIONS:
 				target = state[r + dr][c + dc]
-				if is_free(target) or is_player(target):
+				if (is_free(target) or is_player(target)) and (r+dr, c+dc) not in self.deadends:
 					positioning = find_path(state, pos, (r - dr, c - dc))
 					if positioning is not None:
 						new_pos = (r + dr, c + dc)

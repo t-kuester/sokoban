@@ -77,6 +77,9 @@ class SokobanFrame(tk.Frame):
 			self.game.save()
 		if event.keysym == "l":
 			self.game.load()
+		if event.keysym == "d":
+			self.game.deadends = set() if self.game.deadends else \
+					sokoban.find_deadends(self.game.state)
 		if event.keysym == "z" and self.game.progress:
 			self.redo.append(self.game.undo())
 		if event.keysym == "y" and self.undo:
@@ -171,14 +174,15 @@ class SokobanFrame(tk.Frame):
 			for c, col in enumerate(row):
 				cell = self.game.state[r][c]
 				x, y = c*w, r*w
+				if (r, c) in self.game.deadends:
+					self.canvas.create_rectangle(x, y, x+w, y+w, fill="#CC8888")
 				if cell == sokoban.WALL:
 					self.canvas.create_rectangle(x, y, x+w, y+w, fill="#888888")
 				if sokoban.is_goal(cell):
 					self.canvas.create_oval(x+w*.1, y+w*.1, x+w*.9, y+w*.9, fill="#88CC88")
 				if sokoban.is_box(cell):
-					if (r, c) == self.selected:
-						self.canvas.create_rectangle(x, y, x+w, y+w, fill="#CC8888")
-					self.canvas.create_rectangle(x+w*.2, y+w*.2, x+w*.8, y+w*.8, fill="#CCCC88")
+					color = "#8888CC" if (r, c) == self.selected else "#CCCC88"
+					self.canvas.create_rectangle(x+w*.2, y+w*.2, x+w*.8, y+w*.8, fill=color)
 				if sokoban.is_player(cell):
 					self.canvas.create_oval(x+w*.3, y+w*.3, x+w*.7, y+w*.7, fill="#8888CC")
 
