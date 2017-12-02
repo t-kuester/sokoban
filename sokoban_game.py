@@ -15,7 +15,7 @@ Controls:
 - Arrow Keys: Move/Push
 - Mouse Click: Fast-move, push-planning (RMB: move instantaneous)
 - Mouse Wheel up/down: undo/redo (also: z/y keys)
-- q: quit, r: reload level, s: save snapshot, l: load snapshot
+- q: quit, r: reload level, s: save snapshot, l: load snapshot, d: show deadends
 - PgUp/PgDn: Next/Previous Level
 - Shift + PgUp/PgDn: Next/Previous unsolved Level (if any)
 """
