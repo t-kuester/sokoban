@@ -82,7 +82,7 @@ class SokobanFrame(tk.Frame):
 					sokoban.find_deadends(self.game.state)
 		if event.keysym == "z" and self.game.progress:
 			self.redo.append(self.game.undo())
-		if event.keysym == "y" and self.undo:
+		if event.keysym == "y" and self.redo:
 			self.game.move(*self.redo.pop())
 		if event.keysym in ("Prior", "Next"):
 			inc = lambda num: (num +1 if event.keysym == "Next" else num-1) % len(self.game.levels)

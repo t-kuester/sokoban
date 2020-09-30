@@ -300,7 +300,7 @@ class SokobanGame:
 
 # testing	
 if __name__ == "__main__":
-	levels = load_levels("levels/microban.txt")
+	levels = load_levels("test.txt")
 	print("Number of levels:", len(levels))
 	for line in levels[0]:
 		print(line)
