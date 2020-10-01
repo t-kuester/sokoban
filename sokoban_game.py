@@ -223,6 +223,12 @@ def main():
 			shutil.copy(source, os.path.join(config_dir, filename))
 			levels = sokoban.load_levels(source)
 			gamestate[filename] = [None] * len(levels)
+			with open(savesfile, 'w') as f:
+				json.dump(gamestate, f, indent=2)
+			print("Level added")
+		else:
+			print("Level already exists")
+		exit(0)
 		
 	if not gamestate:
 		print("No levels known. Run with -f parameter to load levels first")

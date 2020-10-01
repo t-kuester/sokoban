@@ -6,7 +6,7 @@ _2015-2017, Tobias Küster_
 Just my version of the classic Sokoban puzzle. Initially, this was just one among
 many little entries in my `games` repository, but I like this one quite a bit (in
 fact more than other, more professional versions of the game I've played so far)
-and thus decided to move this to it's own repo and give it a bit more polish.
+and thus decided to move this to its own repo and give it a bit more polish.
 
 It has a super-minimalistic UI, but it can read arbitrary Sokoban level files and
 keep a record of what level has been solved in how many moves. Also, it featurse
@@ -27,11 +27,39 @@ Features:
 Game Start and Loading Level Files
 ----------------------------------
 
-TODO
+Initially, there will be no known level sets, but many can be found on the internet,
+often in a `.txt` format that can be read by this program, e.g. like this (from microban):
+
+	####
+	# .#
+	#  ###
+	#*@  #
+	#  $ #
+	#  ###
+	####
+	; 1
+
+To add the level set, run the program as `python3 sokoban_game.py -f path/to/levelset.txt`.
+The levels will then be copied to the configuration directory `~/.config/t-kuester/sokoban`
+and can then be played without specifying the path to the file.
+
+Now when started, the game will present a simple command-line menu of all known level
+sets and the respective number of solved levels and total number of levels in the set.
+Select the level set you want to play to start the game.
+
+	Known Level Sets
+	 1   2/ 90   Original.txt
+	 2   0/155   microban.txt
+	Select level set: 1
+
+Your progress on the different level sets will be saved in the file `sokoban_saves.json`
+in the configuration directory.
 
 
-Game Controls
--------------
+Game Window
+-----------
+
+![Screenshot](sokoban.png)
 
 UI Symbols:
 * blue dot: player
@@ -46,6 +74,10 @@ Status Line Format:
 * number of steps used so far
 * best number of steps used for this level
 * last 30 moves (u/l/r/r; upper-case means pushed)
+
+
+Controls
+--------
 
 Keyboard-Controls:
 * Arrow Keys: Move/Push
