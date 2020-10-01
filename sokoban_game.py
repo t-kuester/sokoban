@@ -198,15 +198,17 @@ def main():
 	"""Load high scores, select level file, start game, save scores.
 	"""
 	import optparse
+	import os, shutil
 	fmt = optparse.IndentedHelpFormatter()
 	fmt.format_description = lambda desc: desc.strip() + "\n"
 	parser = optparse.OptionParser("sokoban_game.py [options]", formatter=fmt, description=__doc__)
-	parser.add_option("-m", dest="show_menu", help="show level menu", action="store_true")
-	parser.add_option("-f", dest="levelfile", help="select level file")
+	parser.add_option("-f", dest="levelfile", help="add new level file")
 	(options, args) = parser.parse_args()
 
 	# load highscores for level file
-	savesfile = "sokoban_saves.json"
+	config_dir = os.path.join(os.environ["HOME"], ".config", "t-kuester", "sokoban")
+	os.makedirs(config_dir, exist_ok=True)
+	savesfile = os.path.join(config_dir, "sokoban_saves.json")
 	try:
 		with open(savesfile) as f:
 			gamestate = json.load(f)
@@ -214,27 +216,33 @@ def main():
 		gamestate = {}
 	
 	# load level file given as parameter, or select from saves
-	levelfile = None
 	if options.levelfile:
-		levelfile = options.levelfile
-	elif options.show_menu and gamestate:
-		for n, (levelset, scores) in enumerate(sorted(gamestate.items()), start=1):
-			solved = sum(s is not None for s in scores)
-			complete = "*" if solved == len(scores) else " "
-			print("%2d %3d/%3d %s %s" % (n, solved, len(scores), complete, levelset))
-		selection = input("Select level set: ")
-		if selection.isdigit() and 0 < int(selection) <= n:
-			levelfile = sorted(gamestate)[int(selection) - 1]
-	elif options.show_menu:
-		print("No levels known; use -f to load level file.")
+		source = options.levelfile
+		filename = os.path.split(source)[-1]
+		if filename not in gamestate:
+			shutil.copy(source, os.path.join(config_dir, filename))
+			levels = sokoban.load_levels(source)
+			gamestate[filename] = [None] * len(levels)
+		
+	if not gamestate:
+		print("No levels known. Run with -f parameter to load levels first")
+		exit(1)
+	
+	print("Known Level Sets")
+	for n, (levelset, scores) in enumerate(sorted(gamestate.items()), start=1):
+		solved = sum(s is not None for s in scores)
+		complete = "*" if solved == len(scores) else " "
+		print("%2d %3d/%3d %s %s" % (n, solved, len(scores), complete, levelset))
+	selection = input("Select level set: ")
+	if selection.isdigit() and 0 < int(selection) <= n:
+		filename = sorted(gamestate)[int(selection) - 1]
 	else:
-		parser.print_help()
-	if levelfile is None:
-		exit()
+		print("Invalid Input")
+		exit(1)
 
 	# start game
-	levels = sokoban.load_levels(levelfile)
-	scores = gamestate.get(levelfile, [None] * len(levels))
+	levels = sokoban.load_levels(os.path.join(config_dir, filename))
+	scores = gamestate.get(filename, [None] * len(levels))
 	game = sokoban.SokobanGame(levels)
 	root = tk.Tk()
 	root.geometry("640x480")
@@ -242,9 +250,10 @@ def main():
 	root.mainloop()
 
 	# save highscores
-	gamestate[levelfile] = scores
+	# XXX save actual best moves, and improve format
+	gamestate[filename] = scores
 	with open(savesfile, 'w') as f:
-		json.dump(gamestate, f)
+		json.dump(gamestate, f, indent=2)
 
 if __name__ == "__main__":
 	main()
