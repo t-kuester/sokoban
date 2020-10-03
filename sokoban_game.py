@@ -71,8 +71,9 @@ class SokobanFrame(tk.Frame):
 		"""
 		self.path = None
 		self.selected = None
-		if event.keysym == "q":
-			self.quit()
+		# XXX does not work properly with While loop in main...
+		# ~if event.keysym == "q":
+			# ~self.quit()
 		if event.keysym == "r":
 			self.game.load_level()
 		if event.keysym == "s":
@@ -236,34 +237,36 @@ def main():
 		print("No levels known. Run with -f parameter to load levels first")
 		exit(1)
 	
-	print("Known Level Sets")
-	for n, (levelset, scores) in enumerate(sorted(gamestate.items()), start=1):
-		solved = sum(s is not None for s in scores)
-		complete = "*" if solved == len(scores) else " "
-		print("%2d %3d/%3d %s %s" % (n, solved, len(scores), complete, levelset))
-	selection = input("Select level set: ")
-	if selection.isdigit() and 0 < int(selection) <= n:
-		filename = sorted(gamestate)[int(selection) - 1]
-	else:
-		print("Invalid Input")
-		exit(1)
+	while True:
+		with open(savesfile) as f:
+				gamestate = json.load(f)
+		
+		print("Known Level Sets")
+		for n, (levelset, scores) in enumerate(sorted(gamestate.items()), start=1):
+			solved = sum(s is not None for s in scores)
+			complete = "*" if solved == len(scores) else " "
+			print("%2d %3d/%3d %s %s" % (n, solved, len(scores), complete, levelset))
+		selection = input("Select level set (anything else to quit): ")
+		if selection.isdigit() and 0 < int(selection) <= n:
+			filename = sorted(gamestate)[int(selection) - 1]
+		else:
+			break
 
-	# start game
-	levels = sokoban.load_levels(os.path.join(config_dir, filename))
-	scores = gamestate.get(filename, [None] * len(levels))
-	game = sokoban.SokobanGame(levels)
-	root = tk.Tk()
-	root.geometry("640x480")
-	SokobanFrame(root, game, scores)
-	root.mainloop()
-	
-	# TODO go back to level selection, exit on 0 or similar
+		# start game
+		levels = sokoban.load_levels(os.path.join(config_dir, filename))
+		scores = gamestate.get(filename, [None] * len(levels))
+		game = sokoban.SokobanGame(levels)
+		root = tk.Tk()
+		root.geometry("640x480")
+		SokobanFrame(root, game, scores)
+		root.mainloop()
 
-	# save highscores
-	# XXX save actual best moves, and improve format
-	gamestate[filename] = scores
-	with open(savesfile, 'w') as f:
-		json.dump(gamestate, f, indent=2)
+		# save highscores
+		# XXX save actual best moves, and improve format
+		gamestate[filename] = scores
+		with open(savesfile, 'w') as f:
+			json.dump(gamestate, f, indent=2)
+		print()
 
 if __name__ == "__main__":
 	main()
