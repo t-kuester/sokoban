@@ -13,16 +13,18 @@ Features:
 
 Controls:
 - Arrow Keys: Move/Push
-- Mouse Click: Fast-move, push-planning (RMB: move instantaneous)
+- Mouse Click: Fast-move, push-planning (RMB: skip animation)
 - Mouse Wheel up/down: undo/redo (also: z/y keys)
 - q: quit, r: reload level, s: save snapshot, l: load snapshot, d: show deadends
 - PgUp/PgDn: Next/Previous Level
 - Shift + PgUp/PgDn: Next/Previous unsolved Level (if any)
 """
 
-import sokoban
 import tkinter as tk
 import json
+
+import sokoban
+import search
 
 DIRECTIONS = {"Right": (0, +1), "Left": (0, -1), "Up": (-1, 0), "Down": (+1, 0)}
 DIRECTIONS_INV = {(0, +1, 1): "R", (0, -1, 1): "L", (-1, 0, 1): "U", (+1, 0, 1): "D",
@@ -79,7 +81,7 @@ class SokobanFrame(tk.Frame):
 			self.game.load()
 		if event.keysym == "d":
 			self.game.deadends = set() if self.game.deadends else \
-					sokoban.find_deadends(self.game.state)
+					search.find_deadends(self.game.state)
 		if event.keysym == "z" and self.game.progress:
 			self.redo.append(self.game.undo())
 		if event.keysym == "y" and self.redo:
@@ -122,10 +124,10 @@ class SokobanFrame(tk.Frame):
 				if sokoban.is_free(symbol) or sokoban.is_player(symbol):
 					self.redo = []
 					if self.selected is None:
-						self.path = self.game.find_path(r, c)
+						self.path = search.find_path(self.game.state, (self.game.r, self.game.c), (r, c))
 						self.move_path(move_fast)
 					else:
-						self.path = self.game.plan_push(self.selected, (r, c))
+						self.path = search.plan_push(self.game.state, (self.game.r, self.game.c), self.selected, (r, c))
 						self.move_path(move_fast)
 					self.selected = None
 			except IndexError:
@@ -254,6 +256,8 @@ def main():
 	root.geometry("640x480")
 	SokobanFrame(root, game, scores)
 	root.mainloop()
+	
+	# TODO go back to level selection, exit on 0 or similar
 
 	# save highscores
 	# XXX save actual best moves, and improve format

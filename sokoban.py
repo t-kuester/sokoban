@@ -11,8 +11,17 @@ The game model provides basic functionality for movement and for pushing boxes,
 for path planning and for planning to push a box to a given location.
 """
 
-import collections
-import heapq
+"""
+TODO refactoring
+- move planning functions to separate module
+	- is deadends-reference needed?
+- split up sokoban-game god-object into many smaller classes, also helping typing
+	- e.g. Position, Move, State, Level, LevelSet
+	- does this induce overhead that slows down path planning?
+"""
+
+
+DIRECTIONS = ((0, +1), (0, -1), (-1, 0), (+1, 0))
 
 WALL        = '#'
 PLAYER      = '@'
@@ -23,24 +32,11 @@ FLOOR_GOAL  = '.'
 FLOOR       = ' '
 COMMENT     = ';'
 
-DIRECTIONS = ((0, +1), (0, -1), (-1, 0), (+1, 0))
+is_goal   = lambda symbol: symbol in (PLAYER_GOAL, BOX_GOAL, FLOOR_GOAL)
+is_free   = lambda symbol: symbol in (FLOOR, FLOOR_GOAL)
+is_player = lambda symbol: symbol in (PLAYER, PLAYER_GOAL)
+is_box    = lambda symbol: symbol in (BOX, BOX_GOAL)
 
-
-def is_goal(symbol):
-	"""return whether the given symbol represents a goal tile"""
-	return symbol in (PLAYER_GOAL, BOX_GOAL, FLOOR_GOAL)
-
-def is_free(symbol):
-	"""return whether the given symbol represents passable space"""
-	return symbol in (FLOOR, FLOOR_GOAL)
-	
-def is_player(symbol):
-	"""return whether the given symbol represents a player"""
-	return symbol in (PLAYER, PLAYER_GOAL)
-	
-def is_box(symbol):
-	"""return whether the given symbol represents a box"""
-	return symbol in (BOX, BOX_GOAL)
 
 def load_levels(filename):
 	"""Load levels from given level file. Levels are separated by empty or
@@ -75,58 +71,6 @@ def check_add(set_, element):
 	"""Add to set and return True iff not already in the set."""
 	return not(element in set_ or set_.add(element))
 
-
-def find_path(state, start, goal):
-	"""Try to find a path from start to goal in the given state. This is
-	a more general version of SokobanGame.find_path, that can also be
-	applied for "future" states in SokobanGame.plan_push.
-	"""
-	# initialize queue and set of visited states
-	queue = collections.deque([(start, [])])
-	visited = set()
-
-	while queue:
-		# pop state, check whether already visited or goal
-		(r, c), path = queue.popleft()
-		if (r, c) == goal:
-			return path
-
-		# expand neighbor states
-		queue.extend(((r + dr, c + dc), path + [(dr, dc, False)])
-				for dr, dc in DIRECTIONS
-				if is_free(state[r + dr][c + dc]) and check_add(visited, (r+dr, c+dc)))
-	return None
-
-def find_deadends(level):
-	"""Find all (most of) the "dead end" positions where block can not be
-	moved out of again. Those position are then highlighted in the game
-	and also prohibited from being visited by the push-planner, making it
-	both more safe and (on some maps) a good deal faster.
-	This does not automatically set SokobanGame.deadends, though.
-	"""
-	# find all goal tiles
-	goals = [(r, c) for r, row in enumerate(level)
-	                for c, sym in enumerate(row) if is_goal(sym)]
-
-	# step 1: find reachable floor
-	queue = collections.deque(goals)
-	floor = set()
-	while queue:
-		(r, c) = queue.popleft()
-		queue.extend((r+dr, c+dc) for dr, dc in DIRECTIONS
-				if level[r+dr][c+dc] != WALL and check_add(floor, (r+dr, c+dc)))
-
-	# step 2: find floor reachable with one buffer to next wall
-	queue = collections.deque(goals)
-	visited = set(goals)
-	while queue:
-		(r, c) = queue.popleft()
-		for dr, dc in DIRECTIONS:
-			if level[r+dr][c+dc] != WALL and level[r+2*dr][c+2*dc] != WALL and check_add(visited, (r+dr, c+dc)):
-				queue.append((r+dr, c+dc))
-
-	# difference of the above are the dead-ends and forbidden areas
-	return floor - visited
 
 
 class SokobanGame:
@@ -231,53 +175,6 @@ class SokobanGame:
 		self.c -= dc
 		return (dr, dc, push)
 
-	def find_path(self, row, col):
-		"""Try to find a path from the current player position to the
-		given row and col, without moving boxes.
-		"""
-		return find_path(self.state, (self.r, self.c), (row, col))
-
-	def plan_push(self, start, goal):
-		"""Plan how to push box from start to goal position. Planning is
-		done using A* planning, taking the players movements into account.
-		We also have to keep track of the actual game state, updating
-		the original state. Positioning of the player is done using the
-		basic movement planning algorithm.
-		"""
-		# create copy of state, initialize queue and visited states
-		original_state = tuplefy(self.state)
-		g, h = 0, distance(start, goal)
-		queue = [((g+h, h), start, (self.r, self.c), [])]
-		visited = set()
-
-		while queue:
-			# pop state, check whether already visited or goal state
-			_, (r, c), pos, path = heapq.heappop(queue)
-
-			if not check_add(visited, ((r, c), pos)):
-				continue
-
-			if (r, c) == goal:
-				return path
-
-			# update state with new player and box positions
-			state = listify(original_state)
-			set_state(state, (self.r, self.c), FLOOR)
-			set_state(state, start, FLOOR)
-			set_state(state, (r, c), BOX)
-
-			# expand neighbor states
-			for dr, dc in DIRECTIONS:
-				target = state[r + dr][c + dc]
-				if (is_free(target) or is_player(target)) and (r+dr, c+dc) not in self.deadends:
-					positioning = find_path(state, pos, (r - dr, c - dc))
-					if positioning is not None:
-						new_pos = (r + dr, c + dc)
-						g = len(path) + len(positioning) + 1
-						h = distance(new_pos, goal)
-						heapq.heappush(queue, ((g+h, h), new_pos, (r, c), path + positioning + [(dr, dc, True)]))
-		return None
-	
 	def replay(self, steps, reset):
 		"""Resets the game state and replay the moves given in the list.
 		"""
@@ -297,6 +194,7 @@ class SokobanGame:
 		"""
 		return "SokobanGame(level: %d/%d, position: %r, progress: %r)" % \
 				(self.number, len(self.levels), (self.r, self.c), self.progress)
+
 
 # testing	
 if __name__ == "__main__":
