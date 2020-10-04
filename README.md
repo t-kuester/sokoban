@@ -100,4 +100,18 @@ Mouse-Controls:
 Planning
 --------
 
-TODO
+Besides simple movement, the game has three (somewhat) advanved search- and
+planning related features: Path-Planning, Push-Planning, and Deadend-Detection.
+
+* **Path-Planning** is not really special, and most, if not all, Sokoban games
+  have this. It calculates the shortest route from one point to another without 
+  pushing any boxes and sends the player character that way.
+* **Push-Planning** is an extension of Path-Planning where instead of moving the
+  player, a box is to be moved from its current location to the destination.
+  This involves re-positioning the player to push the box from different sides,
+  and may even require to push the box multiple times over the same spot to be
+  able to position the player on the right side for the next push.
+* **Deadend-Detection** is used to determine all locations in a level from where
+  a box can not be pushed to any goal position. This includes literal dead-ends,
+  but also all regions close to a wall where a box can not be pushed away from
+  that wall any more. Useful for pruning planning branches and for actual play.
