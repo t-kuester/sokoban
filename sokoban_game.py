@@ -130,7 +130,7 @@ class SokobanFrame(tk.Frame):
 						self.path = search.find_path(self.game.state, p)
 						self.move_path(move_fast)
 					else:
-						self.path = search.plan_push(self.game.state, (self.game.r, self.game.c), self.selected, (r, c))
+						self.path = search.plan_push(self.game.state, self.selected, p)
 						self.move_path(move_fast)
 					self.selected = None
 			except IndexError:

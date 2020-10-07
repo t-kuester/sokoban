@@ -78,42 +78,31 @@ def find_deadends(level):
 	return floor - visited
 
 
-def plan_push(state, player, start, goal, deadends=None):
-	"""Plan how to push box from start to goal position. Planning is
-	done using A* planning, taking the players movements into account.
-	We also have to keep track of the actual game state, updating
-	the original state. Positioning of the player is done using the
-	basic movement planning algorithm.
+def plan_push(state: State, start: Pos, goal: Pos, deadends=None):
+	"""Plan how to push box from start to goal position. Planning is done using
+	A* planning, taking the players movements into account. We also have to keep
+	track of the actual game state, updating the original state. Positioning of
+	the player is done using the basic movement planning algorithm.
 	"""
-	# create copy of state, initialize queue and visited states
-	original_state = tuplefy(state)
-	g, h = 0, distance(start, goal)
-	queue = [((g+h, h), start, player, [])]
+	queue = [(start.dist(goal), start, state.player, [])]
 	visited = set()
 
 	while queue:
-		# pop state, check whether already visited or goal state
-		_, (r, c), pos, path = heapq.heappop(queue)
-
-		if not check_add(visited, ((r, c), pos)):
-			continue
-
-		if (r, c) == goal:
+		_, box, player, path = heapq.heappop(queue)
+		if box == goal:
 			return path
 
-		# update state with new player and box positions
-		state = listify(original_state)
-		set_state(state, player, FLOOR)
-		set_state(state, start, FLOOR)
-		set_state(state, (r, c), BOX)
+		if (box, player) in visited:
+			continue
+		visited.add((box, player))
 
-		# expand neighbor states
-		for dr, dc in DIRECTIONS:
-			target = state[r + dr][c + dc]
-			if (is_free(target) or is_player(target)) and (r+dr, c+dc) not in (deadends or []):
-				positioning = find_path(state, pos, (r - dr, c - dc))
+		# update state with new player and box positions, expand neighbor states
+		# TODO only temporarily apply the changes, then revert?
+		state2 = State(state.level, state.boxes - {start} | {box}, player)
+		for m in MOVES_P:
+			box2 = box.add(m)
+			if state2.is_free(box2) and (box2 not in (deadends or [])):
+				positioning = find_path(state2, box.add(m.inv()))
 				if positioning is not None:
-					new_pos = (r + dr, c + dc)
-					g = len(path) + len(positioning) + 1
-					h = distance(new_pos, goal)
-					heapq.heappush(queue, ((g+h, h), new_pos, (r, c), path + positioning + [(dr, dc, True)]))
+					path2 = path + positioning + [m]
+					heapq.heappush(queue, (len(path2) + box2.dist(goal), box2, box, path2))
