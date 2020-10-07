@@ -35,6 +35,7 @@ COLOR_WALL = "#888888"
 COLOR_GOAL = "#88CC88"
 COLOR_BOX  = "#CCCC88"
 COLOR_PLYR = "#8888CC"
+COLOR_DEAD = "#CC8888"
 
 class SokobanFrame(tk.Frame):
 	"""Sokoban Game Frame.
@@ -85,9 +86,10 @@ class SokobanFrame(tk.Frame):
 			self.game.save_snapshot()
 		if event.keysym == "l":
 			self.game.load_snapshot()
-		# ~if event.keysym == "d":
-			# ~self.game.deadends = set() if self.game.deadends else \
-					# ~search.find_deadends(self.game.state)
+		if event.keysym == "d":
+			# TODO calculate just once, then store whether to show them in UI
+			self.game.state.level.deadends = set() if self.game.state.level.deadends else \
+					search.find_deadends(self.game.state.level)
 		if event.keysym == "z":
 			self.game.state.undo()
 		if event.keysym == "y":
@@ -179,8 +181,8 @@ class SokobanFrame(tk.Frame):
 			for c in range(s.c):
 				p = Pos(r, c)
 				x, y = c*w, r*w
-				# ~if (r, c) in self.game.deadends:
-					# ~self.canvas.create_rectangle(x, y, x+w, y+w, fill="#CC8888")
+				if p in self.game.state.level.deadends:
+					self.canvas.create_rectangle(x, y, x+w, y+w, fill=COLOR_DEAD)
 				if p in self.game.state.level.walls:
 					self.canvas.create_rectangle(x, y, x+w, y+w, fill=COLOR_WALL)
 				if p in self.game.state.level.goals:

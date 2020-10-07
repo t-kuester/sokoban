@@ -14,7 +14,7 @@ from typing import List
 import collections
 import heapq
 
-from model import State, Pos, Move
+from model import State, Level, Pos, Move
 
 
 MOVES   = [Move(dr, dc) for dr, dc in ((0, +1), (0, -1), (-1, 0), (+1, 0))]
@@ -46,39 +46,37 @@ def find_path(state: State, goal: Pos) -> List[Move]:
 				visited.add(p2)
 
 
-def find_deadends(level):
+def find_deadends(level: Level):
 	"""Find all (most of) the "dead end" positions where block can not be
 	moved out of again. Those position are then highlighted in the game
 	and also prohibited from being visited by the push-planner, making it
 	both more safe and (on some maps) a good deal faster.
-	This does not automatically set SokobanGame.deadends, though.
 	"""
-	# find all goal tiles
-	goals = [(r, c) for r, row in enumerate(level)
-	                for c, sym in enumerate(row) if is_goal(sym)]
-
 	# step 1: find reachable floor
-	queue = collections.deque(goals)
+	queue = collections.deque(level.goals)
 	floor = set()
 	while queue:
-		(r, c) = queue.popleft()
-		queue.extend((r+dr, c+dc) for dr, dc in DIRECTIONS
-				if level[r+dr][c+dc] != WALL and check_add(floor, (r+dr, c+dc)))
+		p = queue.popleft()
+		if p not in floor:
+			floor.add(p)
+			queue.extend(p2 for m, p2 in ((m, p.add(m)) for m in MOVES)
+			                if p2 not in level.walls)
 
 	# step 2: find floor reachable with one buffer to next wall
-	queue = collections.deque(goals)
-	visited = set(goals)
+	queue = collections.deque(level.goals)
+	visited = set()
 	while queue:
-		(r, c) = queue.popleft()
-		for dr, dc in DIRECTIONS:
-			if level[r+dr][c+dc] != WALL and level[r+2*dr][c+2*dc] != WALL and check_add(visited, (r+dr, c+dc)):
-				queue.append((r+dr, c+dc))
+		p = queue.popleft()
+		if p not in visited:
+			visited.add(p)
+			queue.extend(p2 for m, p2 in ((m, p.add(m)) for m in MOVES)
+			                if p2 not in level.walls and p2.add(m) not in level.walls)
 
 	# difference of the above are the dead-ends and forbidden areas
 	return floor - visited
 
 
-def plan_push(state: State, start: Pos, goal: Pos, deadends=None):
+def plan_push(state: State, start: Pos, goal: Pos):
 	"""Plan how to push box from start to goal position. Planning is done using
 	A* planning, taking the players movements into account. We also have to keep
 	track of the actual game state, updating the original state. Positioning of
@@ -101,7 +99,7 @@ def plan_push(state: State, start: Pos, goal: Pos, deadends=None):
 		state2 = State(state.level, state.boxes - {start} | {box}, player)
 		for m in MOVES_P:
 			box2 = box.add(m)
-			if state2.is_free(box2) and (box2 not in (deadends or [])):
+			if state2.is_free(box2) and box2 not in state.level.deadends:
 				positioning = find_path(state2, box.add(m.inv()))
 				if positioning is not None:
 					path2 = path + positioning + [m]
