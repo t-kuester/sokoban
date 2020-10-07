@@ -31,6 +31,9 @@ class Pos(NamedTuple):
 
 	def add(self, move: Move):
 		return Pos(self.r + move.dr, self.c + move.dc)
+	
+	def dist(self, pos) -> int:
+		return abs(self.r - pos.r) + abs(self.c - pos.c)
 
 
 class State:
@@ -97,7 +100,7 @@ class State:
 			return Move
 	
 	def redo(self):
-		""" Redo previously undone move.
+		""" Redo previously undone move, if any.
 		"""
 		if self.redoable:
 			self.move(self.redoable.pop(), _clear_redo=False)
@@ -123,6 +126,7 @@ class Level:
 	def replay(self, moves: List[Move]) -> State:
 		""" Recreate state from list of moves applied to initial state.
 		"""
+		# TODO is this method actually still needed?
 		state = self.initial_state.copy()
 		for i, move in enumerate(moves):
 			assert state.can_move(move)
@@ -157,7 +161,3 @@ class SokobanGame:
 	def load_snapshot(self):
 		if self.snapshot:
 			self.state = self.snapshot.copy()
-
-	def __str__(self):
-		return "SokobanGame(level: %d/%d, position: %r, progress: %r)" % \
-				(self.number, len(self.levels), (self.r, self.c), self.progress)

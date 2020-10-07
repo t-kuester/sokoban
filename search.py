@@ -1,28 +1,44 @@
+# -*- coding: utf8 -*-
+
+"""
+Sokoban Planning Algorithms, by Tobias Kuester, 2014-2017, 2020
+
+This module provides the planning algorithms used in the Sokoban game, i.e.
+everything that goes beyond simulating a simple move or push. Currently it
+includes algorithms for finding the path to a certain position, for planning
+how to push a box to a certain position, or for identifying "dead-end" positions
+in a level. More might be added in the future.
+"""
+
+from typing import List
 import collections
 import heapq
 
 from model import State, Pos, Move
 
 
-MOVES = [Move(dr, dc) for dr, dc in ((0, +1), (0, -1), (-1, 0), (+1, 0))]
+MOVES   = [Move(dr, dc) for dr, dc in ((0, +1), (0, -1), (-1, 0), (+1, 0))]
+MOVES_P = [Move(dr, dc, True) for dr, dc, _ in MOVES]
 
 
-def find_path(state: State, goal: Pos):
-	"""Try to find a path from start to goal in the given state. This is
-	a more general version of SokobanGame.find_path, that can also be
-	applied for "future" states in SokobanGame.plan_push.
+def find_path(state: State, goal: Pos) -> List[Move]:
+	"""Try to find a path for the player to the goal in the given state.
+	This is also used for the push-planning algorithm below for checking whether
+	the player can be repositioned for attacking the box from a different side.
+	This is using a simple Breadth First Search; I also tried A* some time ago
+	(like for push-planning), but it was not any faster here.
 	"""
-	# initialize queue and set of visited states
+	if not state.is_free(goal):
+		return None
+	
 	queue = collections.deque([(state.player, [])])
 	visited = set()
 
 	while queue:
-		# pop state, check whether already visited or goal
 		p, path = queue.popleft()
 		if p == goal:
 			return path
 
-		# expand neighbor states
 		for m in MOVES:
 			p2 = p.add(m)
 			if state.is_free(p2) and p2 not in visited:
