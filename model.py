@@ -19,7 +19,7 @@ from typing import List, NamedTuple
 class Move(NamedTuple):
 	""" Data Class representing a move. """
 	dr: int
-	dr: int
+	dc: int
 	push: bool
 
 	def inv(self):
@@ -55,21 +55,20 @@ class State:
 	def is_free(self, pos: Pos) -> bool:
 		""" Check whether given position is free.
 		"""
-		return pos in self.level.floor and pos not in self.boxes
+		return pos not in self.level.walls and pos not in self.boxes
 	
 	def can_move(self, move: Move) -> bool:
 		"""Check whether player can move to an adjacent location, with or 
 		without being allowed to push a box.
 		"""
-		next_     = self.player.add(move)
-		return is_free(next_) or \
-		       move.push and next_ in self.boxes and is_free(next_.add(move))
+		next_ = self.player.add(move)
+		return self.is_free(next_) or \
+		       move.push and next_ in self.boxes and self.is_free(next_.add(move))
 	
 	def move(self, move: Move) -> bool:
 		"""Move to an adjacent location, after checking whether that move would 
 		be legal, with or without being allowed to move a box.
 		"""
-		# TODO use assert here?
 		if self.can_move(move):
 			self.player = self.player.add(move)
 			push = self.player in self.boxes
@@ -82,7 +81,7 @@ class State:
 		else:
 			return False
 	
-	def undo(self) -> bool:
+	def undo(self) -> Move:
 		"""Undo last step from game's progress, moving the player to the
 		previous position and "pulling" the crate, if previously pushed,
 		back to the player's current position.
@@ -93,9 +92,7 @@ class State:
 				self.boxes.add(self.player)
 				self.boxes.remove(self.player.add(move))
 			self.player = self.player.add(move.inv())
-			return True
-		else:
-			return False
+			return Move
 	
 	def is_solved(self) -> bool:
 		"""Check whether all goal tiles have a box placed on them.
@@ -109,8 +106,8 @@ class Level:
 	"""
 	# TODO add deadends here?
 	
-	def __init__(self, floor, goals, boxes, player):
-		self.floor = frozenset(floor)
+	def __init__(self, walls, goals, boxes, player):
+		self.walls = frozenset(walls)
 		self.goals = frozenset(goals)
 		self.initial_state = State(self, boxes, player)
 	
@@ -130,34 +127,31 @@ class Level:
 class SokobanGame:
 	"""Class representing the current state of the Sokoban game.
 	
-	This class encapsulates the entire level set, the current level, the current
-	position of the player, and a list of the moves so far taken.
 	"""
 	
-	def __init__(self, levels):
+	def __init__(self, levels: List[Level]):
 		self.levels = levels
 		self.number = 0
+		self.state = None
+		self.snapshot = None
 		self.load_level()
-		self.backup = None
-		self.deadends = set()
-		
+	
 	def load_level(self, number=None):
 		"""Load level with given number from current level set.
 		If no number is given, reload the current level.
 		"""
-		self.deadends = set()
-		self.number = number if number is not None else self.number
-		self.state = listify(self.levels[self.number % len(self.levels)])
-		self.progress = []
-		self.r = self.c = 0
-		for r, row in enumerate(self.state):
-			for c, col in enumerate(row):
-				if is_player(self.state[r][c]):
-					self.r, self.c = r, c
-		if number:
-			self.backup = None
+		if number is not None:
+			self.number = number
+			self.snapshot = None
+		self.state = self.levels[self.number].initial_state.copy()
 
+	def save_snapshot(self):
+		self.snapshot = self.state.copy()
 	
+	def load_snapshot(self):
+		if self.snapshot:
+			self.state = self.snapshot.copy()
+
 	def __str__(self):
 		return "SokobanGame(level: %d/%d, position: %r, progress: %r)" % \
 				(self.number, len(self.levels), (self.r, self.c), self.progress)

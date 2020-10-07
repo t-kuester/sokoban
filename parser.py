@@ -17,22 +17,22 @@ def load_level(lines: Iterable[str]) -> Level:
 	"""Load individual level in standard Sokoban Txt Format, using the above
 	defined symbols. Creates a Level instance with an according initial State.
 	"""
-	floor = set()
-	boxes = set()
+	walls = set()
 	goals = set()
+	boxes = set()
 	player = None
 	for r, line in enumerate(lines):
 		for c, char in enumerate(line):
 			p = Pos(r, c)
-			if char in (FLOOR, FLOOR_GOAL, PLAYER):
-				floor.add(p)
+			if char in (WALL,):
+				walls.add(p)
 			if char in (PLAYER_GOAL, BOX_GOAL, FLOOR_GOAL):
 				goals.add(p)
 			if char in (BOX, BOX_GOAL):
 				boxes.add(p)
 			if char in (PLAYER, PLAYER_GOAL):
 				player = p
-	return Level(floor, goals, boxes, player)
+	return Level(walls, goals, boxes, player)
 
 
 def load_levels(filename: str) -> List[Level]:
