@@ -23,12 +23,18 @@ Controls:
 import tkinter as tk
 import json
 
-import sokoban
+from parser import load_levels
+from model import SokobanGame, Pos, Move
 import search
 
 DIRECTIONS = {"Right": (0, +1), "Left": (0, -1), "Up": (-1, 0), "Down": (+1, 0)}
 DIRECTIONS_INV = {(0, +1, 1): "R", (0, -1, 1): "L", (-1, 0, 1): "U", (+1, 0, 1): "D",
                   (0, +1, 0): "r", (0, -1, 0): "l", (-1, 0, 0): "u", (+1, 0, 0): "d"}
+
+COLOR_WALL = "#888888"
+COLOR_GOAL = "#88CC88"
+COLOR_BOX  = "#CCCC88"
+COLOR_PLYR = "#8888CC"
 
 class SokobanFrame(tk.Frame):
 	"""Sokoban Game Frame.
@@ -49,7 +55,6 @@ class SokobanFrame(tk.Frame):
 		
 		self.selected = None
 		self.path = None
-		self.redo = []
 
 		self.canvas = tk.Canvas(self)
 		self.canvas.pack(side=tk.TOP, fill=tk.BOTH, expand=tk.YES)
@@ -77,30 +82,28 @@ class SokobanFrame(tk.Frame):
 		if event.keysym == "r":
 			self.game.load_level()
 		if event.keysym == "s":
-			self.game.save()
+			self.game.save_snapshot()
 		if event.keysym == "l":
-			self.game.load()
-		if event.keysym == "d":
-			self.game.deadends = set() if self.game.deadends else \
-					search.find_deadends(self.game.state)
-		if event.keysym == "z" and self.game.progress:
-			self.redo.append(self.game.undo())
-		if event.keysym == "y" and self.redo:
-			self.game.move(*self.redo.pop())
+			self.game.load_snapshot()
+		# ~if event.keysym == "d":
+			# ~self.game.deadends = set() if self.game.deadends else \
+					# ~search.find_deadends(self.game.state)
+		if event.keysym == "z":
+			self.game.state.undo()
+		if event.keysym == "y":
+			self.game.state.redo()
 		if event.keysym in ("Prior", "Next"):
+			# TODO move logic for this to SokobanGame class
 			inc = lambda num: (num +1 if event.keysym == "Next" else num-1) % len(self.game.levels)
 			number = inc(self.game.number)
 			# shift: fast-forward to next unsolved level, if any
 			while shift and self.scores[number] and number != self.game.number:
 				number = inc(number)
-			self.redo = []
-			self.game.load_level(number )
+			self.game.load_level(number)
 		if event.keysym in DIRECTIONS:
-			self.redo = []
 			dr, dc = DIRECTIONS[event.keysym]
-			while self.game.move(dr, dc, not shift) and shift:
-				# self.after(20, self.handle_keys, event, shift)
-				pass
+			if self.game.state.move(Move(dr, dc, not shift)) and shift:
+				self.after(20, self.handle_keys, event, shift)
 		self.update_state()
 		
 	def handle_mouse(self, event):
@@ -155,14 +158,14 @@ class SokobanFrame(tk.Frame):
 		etc.), update the status line, and redraw the canvas.
 		"""
 		num = self.game.number
-		solved = self.game.check_solved()
+		solved = self.game.state.is_solved()
 		num_solved = sum(x is not None for x in self.scores)
-		turns = len(self.game.progress)
+		turns = len(self.game.state.history)
 		if solved and (self.scores[num] is None or turns < self.scores[num]):
 			self.scores[num] = turns
 		status = "%d, %d/%d, %d Steps (Best: %r)" % (num + 1, num_solved,
 				len(self.game.levels), turns, self.scores[num])
-		history = " ".join(DIRECTIONS_INV[d] for d in self.game.progress[-30:])
+		history = " ".join(DIRECTIONS_INV[d] for d in self.game.state.history[-30:])
 		self.status.configure(text=status)
 		self.history.configure(text=history)
 		self.draw_state()
@@ -172,29 +175,29 @@ class SokobanFrame(tk.Frame):
 		"""
 		self.update()
 		self.canvas.delete("all")
+		s = self.game.state.level.size
 		w = self.get_cellwidth()
-		for r, row in enumerate(self.game.state):
-			for c, col in enumerate(row):
-				cell = self.game.state[r][c]
+		for r in range(s.r):
+			for c in range(s.c):
+				p = Pos(r, c)
 				x, y = c*w, r*w
-				if (r, c) in self.game.deadends:
-					self.canvas.create_rectangle(x, y, x+w, y+w, fill="#CC8888")
-				if cell == sokoban.WALL:
-					self.canvas.create_rectangle(x, y, x+w, y+w, fill="#888888")
-				if sokoban.is_goal(cell):
-					self.canvas.create_oval(x+w*.1, y+w*.1, x+w*.9, y+w*.9, fill="#88CC88")
-				if sokoban.is_box(cell):
-					color = "#8888CC" if (r, c) == self.selected else "#CCCC88"
+				# ~if (r, c) in self.game.deadends:
+					# ~self.canvas.create_rectangle(x, y, x+w, y+w, fill="#CC8888")
+				if p in self.game.state.level.walls:
+					self.canvas.create_rectangle(x, y, x+w, y+w, fill=COLOR_WALL)
+				if p in self.game.state.level.goals:
+					self.canvas.create_oval(x+w*.1, y+w*.1, x+w*.9, y+w*.9, fill=COLOR_GOAL)
+				if p in self.game.state.boxes:
+					color = COLOR_PLYR if (r, c) == self.selected else COLOR_BOX
 					self.canvas.create_rectangle(x+w*.2, y+w*.2, x+w*.8, y+w*.8, fill=color)
-				if sokoban.is_player(cell):
-					self.canvas.create_oval(x+w*.3, y+w*.3, x+w*.7, y+w*.7, fill="#8888CC")
+				if p == self.game.state.player:
+					self.canvas.create_oval(x+w*.3, y+w*.3, x+w*.7, y+w*.7, fill=COLOR_PLYR)
 
 	def get_cellwidth(self):
 		"""Simple helper method for getting the optimal width for a cell.
 		"""
-		width, height = self.canvas.winfo_width(), self.canvas.winfo_height()
-		return min(height / len(self.game.state), 
-		           width  / max(map(len, self.game.state)))
+		size = self.game.state.level.size
+		return min(self.canvas.winfo_height() / size.r, self.canvas.winfo_width() / size.c)
 
 
 def main():
@@ -224,7 +227,8 @@ def main():
 		filename = os.path.split(source)[-1]
 		if filename not in gamestate:
 			shutil.copy(source, os.path.join(config_dir, filename))
-			levels = sokoban.load_levels(source)
+			# XXX this part is pretty dumb... initialize differently!
+			levels = load_levels(source)
 			gamestate[filename] = [None] * len(levels)
 			with open(savesfile, 'w') as f:
 				json.dump(gamestate, f, indent=2)
@@ -253,9 +257,9 @@ def main():
 			break
 
 		# start game
-		levels = sokoban.load_levels(os.path.join(config_dir, filename))
+		levels = load_levels(os.path.join(config_dir, filename))
 		scores = gamestate.get(filename, [None] * len(levels))
-		game = sokoban.SokobanGame(levels)
+		game = SokobanGame(levels)
 		root = tk.Tk()
 		root.geometry("640x480")
 		SokobanFrame(root, game, scores)

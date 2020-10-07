@@ -120,6 +120,7 @@ class Level:
 	def __init__(self, walls, goals, boxes, player):
 		self.walls = frozenset(walls)
 		self.goals = frozenset(goals)
+		self.size = Pos(max(r+1 for r, c in walls), max(c+1 for r, c in walls))
 		self.initial_state = State(self, boxes, player)
 	
 	def replay(self, moves: List[Move]) -> State:
