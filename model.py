@@ -46,6 +46,7 @@ class State:
 		self.boxes = set(boxes)
 		self.player = player
 		self.history = list(history or [])
+		self.redoable = []
 		
 	def copy(self):
 		""" Create copy of this state, e.g. for making a savestate.
@@ -65,7 +66,7 @@ class State:
 		return self.is_free(next_) or \
 		       move.push and next_ in self.boxes and self.is_free(next_.add(move))
 	
-	def move(self, move: Move) -> bool:
+	def move(self, move: Move, _clear_redo=True):
 		"""Move to an adjacent location, after checking whether that move would 
 		be legal, with or without being allowed to move a box.
 		"""
@@ -77,6 +78,8 @@ class State:
 				self.boxes.add(self.player.add(move))
 			# add to history whether we _actually_ pushed a box
 			self.history.append(Move(move.dr, move.dc, push))
+			if _clear_redo:
+				self.redoable = []
 			return True
 		else:
 			return False
@@ -92,7 +95,15 @@ class State:
 				self.boxes.add(self.player)
 				self.boxes.remove(self.player.add(move))
 			self.player = self.player.add(move.inv())
+			self.redoable.append(move)
 			return Move
+	
+	def redo(self):
+		""" Redo previously undone move.
+		"""
+		if self.redoable:
+			self.move(self.redoable.pop(), _clear_redo=False)
+		
 	
 	def is_solved(self) -> bool:
 		"""Check whether all goal tiles have a box placed on them.
