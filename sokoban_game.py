@@ -111,24 +111,23 @@ class SokobanFrame(tk.Frame):
 		"""
 		if event.num in (4, 5):
 			# mouse wheel: undo/redo
-			if event.num == 4 and self.game.progress:
-				self.redo.append(self.game.undo())
-			if event.num == 5 and self.redo:
-				self.game.move(*self.redo.pop())
+			if event.num == 4:
+				self.game.state.undo()
+			if event.num == 5:
+				self.game.state.redo()
 
 		if event.num in (1, 3):
 			# left/right mouse button: move/push
 			w = self.get_cellwidth()
 			r, c = int(event.y // w), int(event.x // w)
+			p = Pos(r, c)
 			move_fast = event.num == 3 # RMB -> move fast
 			try:
-				symbol = self.game.state[r][c]
-				if sokoban.is_box(symbol):
-					self.selected = (r, c)
-				if sokoban.is_free(symbol) or sokoban.is_player(symbol):
-					self.redo = []
+				if p in self.game.state.boxes:
+					self.selected = p
+				if self.game.state.is_free(p):
 					if self.selected is None:
-						self.path = search.find_path(self.game.state, (self.game.r, self.game.c), (r, c))
+						self.path = search.find_path(self.game.state, p)
 						self.move_path(move_fast)
 					else:
 						self.path = search.plan_push(self.game.state, (self.game.r, self.game.c), self.selected, (r, c))
@@ -145,11 +144,10 @@ class SokobanFrame(tk.Frame):
 		"""
 		if self.path:
 			if instant:
-				self.game.replay(self.path, False)
-				self.path = []
+				while self.path:
+					self.game.state.move(self.path.pop(0))
 			else:
-				dr, dc, push = self.path.pop(0)
-				self.game.move(dr, dc, push)
+				self.game.state.move(self.path.pop(0))
 				self.after(25, self.move_path)
 		self.update_state()
 

@@ -11,8 +11,6 @@ Parsing and more sophisticated search and planning are in separate modules.
 from typing import List, NamedTuple
 
 
-#DIRECTIONS = ((0, +1), (0, -1), (-1, 0), (+1, 0))
-
 # class LevelSet: from_file, levels, scores, load(num)
 # class Game: levelset, state, backup (here or in UI? combine with levelset?)
 
@@ -20,7 +18,7 @@ class Move(NamedTuple):
 	""" Data Class representing a move. """
 	dr: int
 	dc: int
-	push: bool
+	push: bool = False
 
 	def inv(self):
 		return Move(-self.dr, -self.dc, self.push)
@@ -103,7 +101,6 @@ class State:
 		"""
 		if self.redoable:
 			self.move(self.redoable.pop(), _clear_redo=False)
-		
 	
 	def is_solved(self) -> bool:
 		"""Check whether all goal tiles have a box placed on them.
@@ -132,9 +129,6 @@ class Level:
 			state.move(move)
 		return state
 	
-
-# TODO include all game state currently stored in the UI class, e.g. the redo
-# redo stack, or searching for the next/previous unsolved level
 
 class SokobanGame:
 	"""Class representing the current state of the Sokoban game.
@@ -167,5 +161,3 @@ class SokobanGame:
 	def __str__(self):
 		return "SokobanGame(level: %d/%d, position: %r, progress: %r)" % \
 				(self.number, len(self.levels), (self.r, self.c), self.progress)
-
-

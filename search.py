@@ -1,28 +1,33 @@
 import collections
 import heapq
 
-from sokoban import *
+from model import State, Pos, Move
 
 
-def find_path(state, start, goal):
+MOVES = [Move(dr, dc) for dr, dc in ((0, +1), (0, -1), (-1, 0), (+1, 0))]
+
+
+def find_path(state: State, goal: Pos):
 	"""Try to find a path from start to goal in the given state. This is
 	a more general version of SokobanGame.find_path, that can also be
 	applied for "future" states in SokobanGame.plan_push.
 	"""
 	# initialize queue and set of visited states
-	queue = collections.deque([(start, [])])
+	queue = collections.deque([(state.player, [])])
 	visited = set()
 
 	while queue:
 		# pop state, check whether already visited or goal
-		(r, c), path = queue.popleft()
-		if (r, c) == goal:
+		p, path = queue.popleft()
+		if p == goal:
 			return path
 
 		# expand neighbor states
-		queue.extend(((r + dr, c + dc), path + [(dr, dc, False)])
-				for dr, dc in DIRECTIONS
-				if is_free(state[r + dr][c + dc]) and check_add(visited, (r+dr, c+dc)))
+		for m in MOVES:
+			p2 = p.add(m)
+			if state.is_free(p2) and p2 not in visited:
+				queue.append((p2, path + [m]))
+				visited.add(p2)
 
 
 def find_deadends(level):
