@@ -11,9 +11,6 @@ Parsing and more sophisticated search and planning are in separate modules.
 from typing import List, NamedTuple
 
 
-# class LevelSet: from_file, levels, scores, load(num)
-# class Game: levelset, state, backup (here or in UI? combine with levelset?)
-
 class Move(NamedTuple):
 	""" Data Class representing a move. """
 	dr: int
@@ -115,7 +112,6 @@ class Level:
 	""" Class representing a Sokoban level, with valid floor positions, goals,
 	and initial state.
 	"""
-	# TODO add deadends here?
 	
 	def __init__(self, walls, goals, boxes, player):
 		self.walls = frozenset(walls)

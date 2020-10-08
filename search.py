@@ -95,7 +95,7 @@ def plan_push(state: State, start: Pos, goal: Pos):
 		visited.add((box, player))
 
 		# update state with new player and box positions, expand neighbor states
-		# TODO only temporarily apply the changes, then revert?
+		# (temporarily modifying the original state is _not_ faster, I tried)
 		state2 = State(state.level, state.boxes - {start} | {box}, player)
 		for m in MOVES_P:
 			box2 = box.add(m)

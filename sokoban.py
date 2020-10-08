@@ -9,17 +9,11 @@ game as well as some helper methods for loading game files and other stuff.
 
 The game model provides basic functionality for movement and for pushing boxes,
 for path planning and for planning to push a box to a given location.
-"""
 
+DEPRECATED
+This module and all the functions within have been entirely refactored into the
+model and parser modules. Kept (for now) as a reference but no longer used.
 """
-TODO refactoring
-- move planning functions to separate module
-	- is deadends-reference needed?
-- split up sokoban-game god-object into many smaller classes, also helping typing
-	- e.g. Position, Move, State, Level, LevelSet
-	- does this induce overhead that slows down path planning?
-"""
-
 
 DIRECTIONS = ((0, +1), (0, -1), (-1, 0), (+1, 0))
 

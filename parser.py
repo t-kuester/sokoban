@@ -1,3 +1,12 @@
+# -*- coding: utf8 -*-
+
+"""
+Sokoban Map Parser, by Tobias Kuester, 2014-2017, 2020
+
+This modules provides functions for parsing standard Sokoban map files in TXT
+format and for creating Levels and initial States from those files.
+"""
+
 from typing import Iterable, List
 from itertools import groupby
 
