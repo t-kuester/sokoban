@@ -10,7 +10,7 @@ how to push a box to a certain position, or for identifying "dead-end" positions
 in a level. More might be added in the future.
 """
 
-from typing import List
+from typing import List, Set, Optional
 import collections
 import heapq
 
@@ -21,7 +21,7 @@ MOVES   = [Move(dr, dc) for dr, dc in ((0, +1), (0, -1), (-1, 0), (+1, 0))]
 MOVES_P = [Move(dr, dc, True) for dr, dc, _ in MOVES]
 
 
-def find_path(state: State, goal: Pos) -> List[Move]:
+def find_path(state: State, goal: Pos) -> Optional[List[Move]]:
 	"""Try to find a path for the player to the goal in the given state.
 	This is also used for the push-planning algorithm below for checking whether
 	the player can be repositioned for attacking the box from a different side.
@@ -46,7 +46,7 @@ def find_path(state: State, goal: Pos) -> List[Move]:
 				visited.add(p2)
 
 
-def find_deadends(level: Level):
+def find_deadends(level: Level) -> Set[Pos]:
 	"""Find all (most of) the "dead end" positions where block can not be
 	moved out of again. Those position are then highlighted in the game
 	and also prohibited from being visited by the push-planner, making it
@@ -76,7 +76,7 @@ def find_deadends(level: Level):
 	return floor - visited
 
 
-def plan_push(state: State, start: Pos, goal: Pos):
+def plan_push(state: State, start: Pos, goal: Pos) -> Optional[List[Move]]:
 	"""Plan how to push box from start to goal position. Planning is done using
 	A* planning, taking the players movements into account. We also have to keep
 	track of the actual game state, updating the original state. Positioning of

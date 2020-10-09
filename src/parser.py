@@ -22,6 +22,7 @@ FLOOR_GOAL  = '.'
 FLOOR       = ' '
 COMMENT     = ';'
 
+
 def load_level(lines: Iterable[str]) -> Level:
 	"""Load individual level in standard Sokoban Txt Format, using the above
 	defined symbols. Creates a Level instance with an according initial State.

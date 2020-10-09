@@ -37,6 +37,7 @@ COLOR_BOX  = "#CCCC88"
 COLOR_PLYR = "#8888CC"
 COLOR_DEAD = "#CC8888"
 
+
 class SokobanFrame(tk.Frame):
 	"""Sokoban Game Frame.
 	
@@ -123,7 +124,7 @@ class SokobanFrame(tk.Frame):
 			w = self.get_cellwidth()
 			r, c = int(event.y // w), int(event.x // w)
 			p = Pos(r, c)
-			move_fast = event.num == 3 # RMB -> move fast
+			move_fast = event.num == 3  # RMB -> move fast
 			try:
 				if p in self.game.state.boxes:
 					self.selected = p
@@ -243,7 +244,7 @@ def main():
 	
 	while True:
 		with open(savesfile) as f:
-				gamestate = json.load(f)
+			gamestate = json.load(f)
 		
 		print("Known Level Sets")
 		for n, (levelset, scores) in enumerate(sorted(gamestate.items()), start=1):
@@ -271,6 +272,7 @@ def main():
 		with open(savesfile, 'w') as f:
 			json.dump(gamestate, f, indent=2)
 		print()
+
 
 if __name__ == "__main__":
 	main()

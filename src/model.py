@@ -61,8 +61,8 @@ class State:
 		without being allowed to push a box.
 		"""
 		next_ = self.player.add(move)
-		return self.is_free(next_) or \
-		       move.push and next_ in self.boxes and self.is_free(next_.add(move))
+		return (self.is_free(next_) or
+				move.push and next_ in self.boxes and self.is_free(next_.add(move)))
 	
 	def move(self, move: Move, _clear_redo=True):
 		"""Move to an adjacent location, after checking whether that move would 
@@ -94,7 +94,7 @@ class State:
 				self.boxes.remove(self.player.add(move))
 			self.player = self.player.add(move.inv())
 			self.redoable.append(move)
-			return Move
+			return move
 	
 	def redo(self):
 		""" Redo previously undone move, if any.
