@@ -78,9 +78,9 @@ class SokobanFrame(tk.Frame):
 		"""
 		self.path = None
 		self.selected = None
-		# XXX does not work properly with While loop in main...
-		# ~if event.keysym == "q":
-			# ~self.quit()
+		if event.keysym == "q":
+			self.master.destroy()
+			return
 		if event.keysym == "r":
 			self.game.load_level()
 		if event.keysym == "s":
