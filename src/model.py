@@ -135,21 +135,31 @@ class SokobanGame:
 	"""Class representing the current state of the Sokoban game.
 	"""
 	
-	def __init__(self, levels: List[Level]):
+	def __init__(self, levels: List[Level], scores: List[int]):
 		self.levels = levels
-		self.number = 0
+		self.scores = scores
+		self.current = 0
 		self.state = None
 		self.snapshot = None
 		self.load_level()
+	
+	def update_score(self):
+		""" Check if level is solved and update best score for current level if
+		number of turns is better.
+		"""
+		if self.state is not None and self.state.is_solved():
+			turns = len(self.state.history)
+			if self.scores[self.current] is None or self.scores[self.current] > turns:
+				self.scores[self.current] = turns
 	
 	def load_level(self, number=None):
 		""" Load level with given number from current level set.
 		If no number is given, reload the current level.
 		"""
 		if number is not None:
-			self.number = number
+			self.current = number
 			self.snapshot = None
-		self.state = self.levels[self.number].initial_state.copy()
+		self.state = self.levels[self.current].initial_state.copy()
 
 	def save_snapshot(self):
 		""" Save snapshot of current state.

@@ -45,14 +45,13 @@ class SokobanFrame(tk.Frame):
 	keyboard and mouse control, loading level sets, undo, etc.
 	"""
 	
-	def __init__(self, master, game, scores):
+	def __init__(self, master, game):
 		"""Create new Sokoban Frame instance, using a given game instance and
 		a dictionary holding the scores for the individual levels.
 		"""
 		tk.Frame.__init__(self, master)
 		self.master.title("Sokoban")
 		self.game = game
-		self.scores = scores
 		self.pack(fill=tk.BOTH, expand=tk.YES)
 		
 		self.selected = None
@@ -98,11 +97,11 @@ class SokobanFrame(tk.Frame):
 		if event.keysym in ("Prior", "Next"):
 			# TODO move logic for this to SokobanGame class
 			inc = lambda num: (num +1 if event.keysym == "Next" else num-1) % len(self.game.levels)
-			number = inc(self.game.number)
+			cur = inc(self.game.current)
 			# shift: fast-forward to next unsolved level, if any
-			while shift and self.scores[number] and number != self.game.number:
-				number = inc(number)
-			self.game.load_level(number)
+			while shift and self.game.scores[cur] and cur != self.game.current:
+				cur = inc(cur)
+			self.game.load_level(cur)
 		if event.keysym in DIRECTIONS:
 			dr, dc = DIRECTIONS[event.keysym]
 			if self.game.state.move(Move(dr, dc, not shift)) and shift:
@@ -158,14 +157,12 @@ class SokobanFrame(tk.Frame):
 		"""Check the current state of the game (solved or not, number of steps, 
 		etc.), update the status line, and redraw the canvas.
 		"""
-		num = self.game.number
-		solved = self.game.state.is_solved()
-		num_solved = sum(x is not None for x in self.scores)
+		self.game.update_score()
+		num = self.game.current
+		num_solved = sum(1 for x in self.game.scores if x is not None)
 		turns = len(self.game.state.history)
-		if solved and (self.scores[num] is None or turns < self.scores[num]):
-			self.scores[num] = turns
 		status = "%d, %d/%d, %d Steps (Best: %r)" % (num + 1, num_solved,
-				len(self.game.levels), turns, self.scores[num])
+				len(self.game.levels), turns, self.game.scores[num])
 		history = " ".join(DIRECTIONS_INV[d] for d in self.game.state.history[-30:])
 		self.status.configure(text=status)
 		self.history.configure(text=history)
@@ -255,11 +252,11 @@ def main():
 
 		# start game
 		levels = load_levels(os.path.join(config_dir, filename))
-		game = SokobanGame(levels)
 		scores = gamestate[filename] or [None] * len(levels)
+		game = SokobanGame(levels, scores)
 		root = tk.Tk()
 		root.geometry("640x480")
-		SokobanFrame(root, game, scores)
+		SokobanFrame(root, game)
 		root.mainloop()
 
 		# save highscores
