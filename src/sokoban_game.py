@@ -237,13 +237,16 @@ def main():
 		print("No levels known. Run with -f parameter to load levels first")
 		exit(1)
 	
+	orig_solved = {ls: sum(s is not None for s in sc) for ls, sc in gamestate.items()}
 	while True:
 		# print level selection menu
 		print("Known Level Sets")
 		for n, (levelset, scores) in enumerate(sorted(gamestate.items()), start=1):
 			solved = sum(s is not None for s in scores)
+			solved_old = orig_solved[levelset]
+			delta = "%+3d" % (solved - solved_old) if solved > solved_old else "   "
 			complete = "*" if solved == len(scores) else " "
-			print("%2d %3d/%3d %s %s" % (n, solved, len(scores), complete, levelset))
+			print("%2d %3d/%3d %s %s %s" % (n, solved, len(scores), delta, complete, levelset))
 		selection = input("Select level set (anything else to quit): ")
 		if selection.isdigit() and 0 < int(selection) <= n:
 			filename = sorted(gamestate)[int(selection) - 1]
