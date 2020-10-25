@@ -228,9 +228,7 @@ def main():
 		filename = os.path.split(source)[-1]
 		if filename not in gamestate:
 			shutil.copy(source, os.path.join(config_dir, filename))
-			# XXX this part is pretty dumb... initialize differently!
-			levels = load_levels(source)
-			gamestate[filename] = [None] * len(levels)
+			gamestate[filename] = None
 			with open(savesfile, 'w') as f:
 				json.dump(gamestate, f, indent=2)
 			print("Level added")
@@ -243,9 +241,7 @@ def main():
 		exit(1)
 	
 	while True:
-		with open(savesfile) as f:
-			gamestate = json.load(f)
-		
+		# print level selection menu
 		print("Known Level Sets")
 		for n, (levelset, scores) in enumerate(sorted(gamestate.items()), start=1):
 			solved = sum(s is not None for s in scores)
@@ -259,8 +255,8 @@ def main():
 
 		# start game
 		levels = load_levels(os.path.join(config_dir, filename))
-		scores = gamestate.get(filename, [None] * len(levels))
 		game = SokobanGame(levels)
+		scores = gamestate[filename] or [None] * len(levels)
 		root = tk.Tk()
 		root.geometry("640x480")
 		SokobanFrame(root, game, scores)

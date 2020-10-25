@@ -57,7 +57,7 @@ class State:
 		return pos not in self.level.walls and pos not in self.boxes
 	
 	def can_move(self, move: Move) -> bool:
-		"""Check whether player can move to an adjacent location, with or 
+		""" Check whether player can move to an adjacent location, with or 
 		without being allowed to push a box.
 		"""
 		next_ = self.player.add(move)
@@ -65,7 +65,7 @@ class State:
 				move.push and next_ in self.boxes and self.is_free(next_.add(move)))
 	
 	def move(self, move: Move, _clear_redo=True):
-		"""Move to an adjacent location, after checking whether that move would 
+		""" Move to an adjacent location, after checking whether that move would 
 		be legal, with or without being allowed to move a box.
 		"""
 		if self.can_move(move):
@@ -83,7 +83,7 @@ class State:
 			return False
 	
 	def undo(self) -> Move:
-		"""Undo last step from game's progress, moving the player to the
+		""" Undo last step from game's progress, moving the player to the
 		previous position and "pulling" the crate, if previously pushed,
 		back to the player's current position.
 		"""
@@ -103,7 +103,7 @@ class State:
 			self.move(self.redoable.pop(), _clear_redo=False)
 	
 	def is_solved(self) -> bool:
-		"""Check whether all goal tiles have a box placed on them.
+		""" Check whether all goal tiles have a box placed on them.
 		"""
 		return all(g in self.boxes for g in self.level.goals)
 	
@@ -133,7 +133,6 @@ class Level:
 
 class SokobanGame:
 	"""Class representing the current state of the Sokoban game.
-	
 	"""
 	
 	def __init__(self, levels: List[Level]):
@@ -144,7 +143,7 @@ class SokobanGame:
 		self.load_level()
 	
 	def load_level(self, number=None):
-		"""Load level with given number from current level set.
+		""" Load level with given number from current level set.
 		If no number is given, reload the current level.
 		"""
 		if number is not None:
@@ -153,8 +152,12 @@ class SokobanGame:
 		self.state = self.levels[self.number].initial_state.copy()
 
 	def save_snapshot(self):
+		""" Save snapshot of current state.
+		"""
 		self.snapshot = self.state.copy()
 	
 	def load_snapshot(self):
+		""" Restore snapshot of current state, if present.
+		"""
 		if self.snapshot:
 			self.state = self.snapshot.copy()
