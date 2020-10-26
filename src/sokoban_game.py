@@ -52,7 +52,7 @@ class SokobanFrame(tk.Frame):
 		a dictionary holding the scores for the individual levels.
 		"""
 		tk.Frame.__init__(self, master)
-		self.master.title("Sokoban")
+		self.master.title(f"Sokoban - {game.title}")
 		self.game = game
 		self.pack(fill=tk.BOTH, expand=tk.YES)
 		
@@ -258,7 +258,7 @@ def main():
 		# start game
 		levels = load_levels(os.path.join(config_dir, filename))
 		scores = gamestate[filename] or [None] * len(levels)
-		game = SokobanGame(levels, scores)
+		game = SokobanGame(filename, levels, scores)
 		root = tk.Tk()
 		root.geometry("640x480")
 		SokobanFrame(root, game)

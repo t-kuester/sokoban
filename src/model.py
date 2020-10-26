@@ -135,7 +135,8 @@ class SokobanGame:
 	"""Class representing the current state of the Sokoban game.
 	"""
 	
-	def __init__(self, levels: List[Level], scores: List[int]):
+	def __init__(self, title, levels: List[Level], scores: List[int]):
+		self.title = title
 		self.levels = levels
 		self.scores = scores
 		self.current = 0
