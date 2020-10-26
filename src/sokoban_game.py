@@ -71,7 +71,7 @@ class SokobanFrame(tk.Frame):
 		self.bind_all("<KeyPress>", self.handle_keys)
 		self.bind_all("<Shift-KeyPress>", lambda e: self.handle_keys(e, True))
 		self.canvas.bind("<ButtonRelease>", self.handle_mouse)
-		self.bind("<Configure>", self.draw_level) # for resizing
+		self.bind("<Configure>", lambda _: self.draw_state(redraw_level=True))
 		self.update_state()
 		
 	def handle_keys(self, event, shift=False):
@@ -104,7 +104,7 @@ class SokobanFrame(tk.Frame):
 			while shift and self.game.scores[cur] and cur != self.game.current:
 				cur = inc(cur)
 			self.game.load_level(cur)
-			self.draw_level()
+			self.draw_state(redraw_level=True)
 		if event.keysym in DIRECTIONS:
 			dr, dc = DIRECTIONS[event.keysym]
 			if self.game.state.move(Move(dr, dc, not shift)) and shift:
@@ -171,29 +171,22 @@ class SokobanFrame(tk.Frame):
 		self.history.configure(text=history)
 		self.draw_state()
 		
-	def draw_level(self, event=None):
-		"""Draw the current level and state of the game to the canvas.
+	def draw_state(self, redraw_level=False):
+		"""Draw the current level and/or state of the game to the canvas.
 		"""
 		self.update()
-		self.canvas.delete("all")
+		self.canvas.delete("all" if redraw_level else "state")
 		w = self.get_cellwidth()
 		to_xy = lambda pos: (pos.c * w, pos.r * w, pos)
 		
-		for x, y, _ in map(to_xy, self.game.state.level.walls):
-			self.canvas.create_rectangle(x, y, x+w, y+w, fill=Color.WALL)
-		for x, y, _ in map(to_xy, self.game.state.level.goals):
-			self.canvas.create_oval(x+w*.1, y+w*.1, x+w*.9, y+w*.9, fill=Color.GOAL)
+		if redraw_level:
+			print("FULL REDRAW")
+			for x, y, _ in map(to_xy, self.game.state.level.walls):
+				self.canvas.create_rectangle(x, y, x+w, y+w, fill=Color.WALL)
+			for x, y, _ in map(to_xy, self.game.state.level.goals):
+				self.canvas.create_oval(x+w*.1, y+w*.1, x+w*.9, y+w*.9, fill=Color.GOAL)
 			
-		self.draw_state()
-	
-	def draw_state(self):
-		"""Draw the current state of the game to the canvas (w/o the level).
-		"""
-		self.canvas.delete("state")
-		w = self.get_cellwidth()
-		to_xy = lambda pos: (pos.c * w, pos.r * w, pos)
 		tags = {"tag": "state"}
-		
 		for x, y, _ in map(to_xy, self.game.state.level.deadends):
 			self.canvas.create_rectangle(x, y, x+w, y+w, fill=Color.DEAD, **tags)
 		for x, y, p in map(to_xy, self.game.state.boxes):
