@@ -175,24 +175,22 @@ class SokobanFrame(tk.Frame):
 		"""
 		self.update()
 		self.canvas.delete("all")
-		s = self.game.state.level.size
 		w = self.get_cellwidth()
-		for r in range(s.r):
-			for c in range(s.c):
-				p = Pos(r, c)
-				x, y = c*w, r*w
-				if p in self.game.state.level.deadends:
-					self.canvas.create_rectangle(x, y, x+w, y+w, fill=Color.DEAD)
-				if p in self.game.state.level.walls:
-					self.canvas.create_rectangle(x, y, x+w, y+w, fill=Color.WALL)
-				if p in self.game.state.level.goals:
-					self.canvas.create_oval(x+w*.1, y+w*.1, x+w*.9, y+w*.9, fill=Color.GOAL)
-				if p in self.game.state.boxes:
-					color = Color.PLYR if (r, c) == self.selected else Color.BOX
-					self.canvas.create_rectangle(x+w*.2, y+w*.2, x+w*.8, y+w*.8, fill=color)
-				if p == self.game.state.player:
-					self.canvas.create_oval(x+w*.3, y+w*.3, x+w*.7, y+w*.7, fill=Color.PLYR)
+		to_xy = lambda pos: (pos.c * w, pos.r * w, pos)
+		
+		for x, y, _ in map(to_xy, self.game.state.level.deadends):
+			self.canvas.create_rectangle(x, y, x+w, y+w, fill=Color.DEAD)
+		for x, y, _ in map(to_xy, self.game.state.level.walls):
+			self.canvas.create_rectangle(x, y, x+w, y+w, fill=Color.WALL)
+		for x, y, _ in map(to_xy, self.game.state.level.goals):
+			self.canvas.create_oval(x+w*.1, y+w*.1, x+w*.9, y+w*.9, fill=Color.GOAL)
+		for x, y, p in map(to_xy, self.game.state.boxes):
+			color = Color.PLYR if p == self.selected else Color.BOX
+			self.canvas.create_rectangle(x+w*.2, y+w*.2, x+w*.8, y+w*.8, fill=color)
 
+		x, y, _ = to_xy(self.game.state.player)
+		self.canvas.create_oval(x+w*.3, y+w*.3, x+w*.7, y+w*.7, fill=Color.PLYR)
+					
 	def get_cellwidth(self):
 		"""Simple helper method for getting the optimal width for a cell.
 		"""
