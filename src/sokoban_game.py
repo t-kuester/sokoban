@@ -225,7 +225,7 @@ def main():
 		filename = os.path.split(source)[-1]
 		if filename not in gamestate:
 			shutil.copy(source, os.path.join(config_dir, filename))
-			gamestate[filename] = None
+			gamestate[filename] = [None] * len(load_levels(source))
 			with open(savesfile, 'w') as f:
 				json.dump(gamestate, f, indent=2)
 			print("Level added")
