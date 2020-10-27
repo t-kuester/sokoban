@@ -124,8 +124,7 @@ class SokobanFrame(tk.Frame):
 		if event.num in (1, 3):
 			# left/right mouse button: move/push
 			w = self.get_cellwidth()
-			r, c = int(event.y // w), int(event.x // w)
-			p = Pos(r, c)
+			p = Pos(int(event.y // w), int(event.x // w))
 			move_fast = event.num == 3  # RMB -> move fast
 			try:
 				if p in self.game.state.boxes:
@@ -180,7 +179,6 @@ class SokobanFrame(tk.Frame):
 		to_xy = lambda pos: (pos.c * w, pos.r * w, pos)
 		
 		if redraw_level:
-			print("FULL REDRAW")
 			for x, y, _ in map(to_xy, self.game.state.level.walls):
 				self.canvas.create_rectangle(x, y, x+w, y+w, fill=Color.WALL)
 			for x, y, _ in map(to_xy, self.game.state.level.goals):
