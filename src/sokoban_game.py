@@ -221,11 +221,19 @@ def main():
 	except IOError:
 		gamestate = {}
 	
+	# EXPERIMENTAL: Aliases for level files	
+	try:
+		with open(os.path.join(config_dir, "aliases.json")) as f:
+			aliases = json.load(f)
+	except IOError:
+		aliases = {}
+	
 	# load level file given as parameter, or select from saves
 	if options.levelfile:
 		source = options.levelfile
 		filename = os.path.split(source)[-1]
 		if filename not in gamestate:
+			# TODO set alias when loading level, just append to aliases file
 			shutil.copy(source, os.path.join(config_dir, filename))
 			gamestate[filename] = [None] * len(load_levels(source))
 			with open(savesfile, 'w') as f:
@@ -243,15 +251,18 @@ def main():
 	while True:
 		# print level selection menu
 		print("Known Level Sets")
-		for n, (levelset, scores) in enumerate(sorted(gamestate.items()), start=1):
+		levels_dict = dict(enumerate(sorted(gamestate, key=lambda s: aliases.get(s, s)), start=1))
+		for n, levelset in levels_dict.items():
+			alias = aliases.get(levelset, levelset)
+			scores = gamestate[levelset]
 			solved = sum(s is not None for s in scores)
 			solved_old = orig_solved[levelset]
 			delta = "%+3d" % (solved - solved_old) if solved > solved_old else "   "
 			complete = "*" if solved == len(scores) else " "
-			print("%2d %3d/%3d %s %s %s" % (n, solved, len(scores), delta, complete, levelset))
+			print("%2d %3d/%3d %s %s %s" % (n, solved, len(scores), delta, complete, alias))
 		selection = input("Select level set (anything else to quit): ")
 		if selection.isdigit() and 0 < int(selection) <= n:
-			filename = sorted(gamestate)[int(selection) - 1]
+			filename = levels_dict[int(selection)]
 		else:
 			break
 
