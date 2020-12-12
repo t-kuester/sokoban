@@ -22,6 +22,7 @@ import tkinter as tk
 
 from model import SokobanGame, Pos, Move
 import search
+import solver
 
 DIRECTIONS = {"Right": (0, +1), "Left": (0, -1), "Up": (-1, 0), "Down": (+1, 0)}
 DIRECTIONS_INV = {(0, +1, 1): "R", (0, -1, 1): "L", (-1, 0, 1): "U", (+1, 0, 1): "D",
@@ -105,6 +106,9 @@ class SokobanFrame(tk.Frame):
 			dr, dc = DIRECTIONS[event.keysym]
 			if self.game.state.move(Move(dr, dc, not shift)) and shift:
 				self.after(20, self.handle_keys, event, shift)
+		if event.keysym == "space":
+			self.path = solver.solve(self.game.state)
+			self.move_path()
 		self.update_state()
 		
 	def handle_mouse(self, event):
