@@ -65,9 +65,13 @@ def solve(state: State) -> Optional[List[Move]]:
 			print(next(c), len(heap), len(seen), time.time() - start)
 			return path
 			
+		in_reach = reachable(state)
+		
 		for box in state.boxes:
-			for pos2 in map(box.add, MOVES):
-				
+			for move in MOVES:
+				pos2 = box.add(move)
+				if box.add(move.inv()) not in in_reach:
+					continue
 				if state.is_free(pos2) and pos2 not in state.level.deadends:
 					p = plan_push(state, box, pos2)
 					if p is not None:
