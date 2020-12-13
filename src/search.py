@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 
 """
-Sokoban Planning Algorithms, by Tobias Kuester, 2014-2017, 2020
+Sokoban Planning Algorithms, by Tobias Küster, 2014-2017, 2020
 
 This module provides the planning algorithms used in the Sokoban game, i.e.
 everything that goes beyond simulating a simple move or push. Currently it

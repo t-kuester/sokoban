@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 
 """
-Sokoban Game Model, by Tobias Kuester, 2014-2017, 2020
+Sokoban Game Model, by Tobias Küster, 2014-2017, 2020
 
 This modules provides classes encapsulating the current state of the Sokoban
 game. The model provides basic functionality for movement and for pushing boxes.

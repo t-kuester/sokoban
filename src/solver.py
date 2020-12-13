@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 
 """
-Sokoban Solver, by Tobias Kuester, 2020
+Sokoban Solver, by Tobias Küster, 2020
 
 This module provides a very simple solver for the Sokoban game based on the
 game model and basic search- and planning-functions in the other modules.

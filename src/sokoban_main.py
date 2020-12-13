@@ -13,6 +13,9 @@ selecting the level to play, and saving the newly solved levels.
 - save progress (solved/unsolved, number of turns) for each level in JSON file
 """
 
+import optparse
+import shutil
+import os
 import json
 
 from parser import load_levels
@@ -23,8 +26,6 @@ from sokoban_ui import show_ui
 def main():
 	"""Load high scores, select level file, start game, save scores.
 	"""
-	import optparse
-	import os, shutil
 	fmt = optparse.IndentedHelpFormatter()
 	fmt.format_description = lambda desc: desc.strip() + "\n"
 	parser = optparse.OptionParser("sokoban_game.py [options]", formatter=fmt, description=__doc__)
@@ -101,4 +102,3 @@ def main():
 
 if __name__ == "__main__":
 	main()
-
