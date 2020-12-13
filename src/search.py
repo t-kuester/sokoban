@@ -60,6 +60,8 @@ def find_path(state: State, goal: Pos) -> Optional[List[Move]]:
 			if state.is_free(p2) and p2 not in visited:
 				queue.append((p2, path + [m]))
 				visited.add(p2)
+	# no path found
+	return None
 
 
 def find_deadends(level: Level) -> Set[Pos]:
@@ -120,3 +122,5 @@ def plan_push(state: State, start: Pos, goal: Pos) -> Optional[List[Move]]:
 				if positioning is not None:
 					path2 = path + positioning + [m]
 					heapq.heappush(queue, (len(path2) + box2.dist(goal), box2, box, path2))
+	# no push-path found
+	return None

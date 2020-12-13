@@ -8,7 +8,7 @@ game. The model provides basic functionality for movement and for pushing boxes.
 Parsing and more sophisticated search and planning are in separate modules.
 """
 
-from typing import List, NamedTuple
+from typing import List, NamedTuple, Optional
 from functools import lru_cache
 
 
@@ -19,6 +19,7 @@ class Move(NamedTuple):
 	dc: int
 	push: bool = False
 
+	@lru_cache(None)
 	def inv(self):
 		return Move(-self.dr, -self.dc, self.push)
 
@@ -86,7 +87,7 @@ class State:
 		else:
 			return False
 	
-	def undo(self) -> Move:
+	def undo(self) -> Optional[Move]:
 		""" Undo last step from game's progress, moving the player to the
 		previous position and "pulling" the crate, if previously pushed,
 		back to the player's current position.
@@ -99,6 +100,7 @@ class State:
 			self.player = self.player.add(move.inv())
 			self.redoable.append(move)
 			return move
+		return None
 	
 	def redo(self):
 		""" Redo previously undone move, if any.

@@ -18,15 +18,9 @@ import time
 from search import find_deadends, reachable, plan_push, find_path, MOVES
 from model import State, Pos, Move
 
-# TODO 
-# - cleanup, documentation, etc.
-# - use heapq for shortest paths, using path-length as key
-#   - but with "fingerprint" shortest might get pruned
-# - add flag "fast" vs "thorough" whether to use fingerprint or not
-# - run through profiler (also for push-plan optimization)
 
 # much faster by pruning many more states, but might miss best state
-USE_FF = True
+USE_FF = False
 
 
 def fingerprint(state: State) -> Tuple[FrozenSet[Pos], Pos]:
@@ -35,7 +29,7 @@ def fingerprint(state: State) -> Tuple[FrozenSet[Pos], Pos]:
 	states where the player is in the same "area" of reachable states the same
 	"""
 	return (frozenset(state.boxes),
-	        min(search.reachable(state)) if USE_FF else state.player)
+	        min(reachable(state)) if USE_FF else state.player)
 
 
 def solveable(state: State) -> bool:
@@ -55,11 +49,12 @@ def solve(state: State) -> Optional[List[Move]]:
 	state.level.deadends = find_deadends(state.level)
 	
 	c = count()
+	i = count()
 	seen = set()
 	heap = [(0, next(c), state, [])]
 	while heap:
 		_, _, state, path = heappop(heap)
-		print(path_to_str(path))
+		print(next(i), path_to_str(path))
 		
 		f = fingerprint(state)
 		if f in seen:
