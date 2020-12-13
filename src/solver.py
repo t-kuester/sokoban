@@ -15,7 +15,7 @@ from itertools import count
 from heapq import heappush, heappop
 import time
 
-from search import find_deadends, plan_push, find_path, MOVES
+from search import find_deadends, reachable, plan_push, find_path, MOVES
 from model import State, Pos, Move
 
 # TODO 
@@ -28,18 +28,6 @@ from model import State, Pos, Move
 # much faster by pruning many more states, but might miss best state
 USE_FF = True
 
-def reachable(state: State) -> Set[Pos]:
-	""" Flood-fill to get all cells reachable by player in the current state
-	without pushing any box.
-	"""
-	seen = set()
-	queue = deque([state.player])
-	while queue:
-		pos = queue.popleft()
-		if pos not in seen:
-			seen.add(pos)
-			queue.extend(pos2 for pos2 in map(pos.add, MOVES) if state.is_free(pos2))
-	return seen
 
 def fingerprint(state: State) -> Tuple[FrozenSet[Pos], Pos]:
 	""" Create a hashable "fingerprint" of the state; depending on the value of
@@ -47,7 +35,7 @@ def fingerprint(state: State) -> Tuple[FrozenSet[Pos], Pos]:
 	states where the player is in the same "area" of reachable states the same
 	"""
 	return (frozenset(state.boxes),
-	        min(reachable(state)) if USE_FF else state.player)
+	        min(search.reachable(state)) if USE_FF else state.player)
 
 
 def solveable(state: State) -> bool:

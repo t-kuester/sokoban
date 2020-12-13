@@ -21,6 +21,20 @@ MOVES   = [Move(dr, dc) for dr, dc in ((0, +1), (0, -1), (-1, 0), (+1, 0))]
 MOVES_P = [Move(dr, dc, True) for dr, dc, _ in MOVES]
 
 
+def reachable(state: State) -> Set[Pos]:
+	""" Flood-fill to get all cells reachable by player in the current state
+	without pushing any box.
+	"""
+	seen = set()
+	queue = collections.deque([state.player])
+	while queue:
+		pos = queue.popleft()
+		if pos not in seen:
+			seen.add(pos)
+			queue.extend(pos2 for pos2 in map(pos.add, MOVES) if state.is_free(pos2))
+	return seen
+
+
 def find_path(state: State, goal: Pos) -> Optional[List[Move]]:
 	"""Try to find a path for the player to the goal in the given state.
 	This is also used for the push-planning algorithm below for checking whether
