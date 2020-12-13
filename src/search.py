@@ -30,6 +30,8 @@ def find_path(state: State, goal: Pos) -> Optional[List[Move]]:
 	"""
 	if not state.is_free(goal):
 		return None
+	if state.player == goal:
+		return []
 	
 	queue = collections.deque([(state.player, [])])
 	visited = set()

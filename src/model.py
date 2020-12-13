@@ -9,8 +9,10 @@ Parsing and more sophisticated search and planning are in separate modules.
 """
 
 from typing import List, NamedTuple
+from functools import lru_cache
 
 
+@lru_cache(None)
 class Move(NamedTuple):
 	""" Data Class representing a move. """
 	dr: int
@@ -21,11 +23,13 @@ class Move(NamedTuple):
 		return Move(-self.dr, -self.dc, self.push)
 
 
+@lru_cache(None)
 class Pos(NamedTuple):
 	""" Data Class representing a Position. """
 	r: int
 	c: int
 
+	@lru_cache(None)
 	def add(self, move: Move):
 		return Pos(self.r + move.dr, self.c + move.dc)
 	
