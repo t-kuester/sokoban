@@ -55,6 +55,7 @@ class SokobanFrame(tk.Frame):
 		
 		self.selected = None
 		self.path = None
+		self.show_reachable = False
 
 		self.canvas = tk.Canvas(self)
 		self.canvas.pack(side=tk.TOP, fill=tk.BOTH, expand=tk.YES)
@@ -109,6 +110,8 @@ class SokobanFrame(tk.Frame):
 		if event.keysym == "space":
 			self.path = solver.solve(self.game.state)
 			self.move_path()
+		if event.keysym == "period":
+			self.show_reachable ^= True
 		self.update_state()
 		
 	def handle_mouse(self, event):
@@ -185,6 +188,11 @@ class SokobanFrame(tk.Frame):
 				self.canvas.create_oval(x+w*.1, y+w*.1, x+w*.9, y+w*.9, fill=Color.GOAL)
 			
 		tags = {"tag": "state"}
+		if self.show_reachable:
+			for x, y, _ in map(to_xy, search.reachable(self.game.state)):
+				self.canvas.create_oval(x+w*.4, y+w*.4, x+w*.6, y+w*.6, outline="#aaaaee", fill="#aaaaee", **tags)
+		
+		
 		for x, y, _ in map(to_xy, self.game.state.level.deadends):
 			self.canvas.create_rectangle(x, y, x+w, y+w, fill=Color.DEAD, **tags)
 		for x, y, p in map(to_xy, self.game.state.boxes):
