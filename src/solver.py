@@ -82,7 +82,9 @@ def solve(state: State) -> Optional[List[Move]]:
 						heappush(heap, (len(p2), next(c), state2, p2))
 	# no path found to solve the level
 	return None
-		
+
+
+# TESTING
 
 DIRECTIONS_INV = {(0, +1, 1): "R", (0, -1, 1): "L", (-1, 0, 1): "U", (+1, 0, 1): "D",
                   (0, +1, 0): "r", (0, -1, 0): "l", (-1, 0, 0): "u", (+1, 0, 0): "d"}
