@@ -10,7 +10,7 @@ how to push a box to a certain position, or for identifying "dead-end" positions
 in a level. More might be added in the future.
 """
 
-from typing import List, Set, Optional
+from typing import List, Set, Optional, Iterable
 import collections
 import heapq
 
@@ -92,6 +92,18 @@ def find_deadends(level: Level) -> Set[Pos]:
 
 	# difference of the above are the dead-ends and forbidden areas
 	return floor - visited
+
+
+def find_deadlocks(state: State) -> Iterable[Pos]:
+	"""Find non-goal boxes that are deadlock by other boxes, e.g. two boxes
+	being next to each other against a wall, or clusters of four boxes.
+	"""
+	occupied = state.boxes | state.level.walls
+	adjacent = [[(-1,-1), (-1, 0), (0,-1)], [(-1, 0), (-1, 1), (0, 1)], 
+			    [( 0, 1), ( 1, 0), (1, 1)], [( 0,-1), ( 1,-1), (1, 0)]]
+	return (box for box in state.boxes - state.level.goals
+			    if any(all(box.add(Move(*a)) in occupied for a in adj)
+			           for adj in adjacent))
 
 
 def plan_push(state: State, start: Pos, goal: Pos) -> Optional[List[Move]]:

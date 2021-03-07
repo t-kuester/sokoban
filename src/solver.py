@@ -15,7 +15,8 @@ from itertools import count
 from heapq import heappush, heappop
 import time
 
-from search import find_deadends, reachable, plan_push, find_path, MOVES
+from search import (find_deadends, find_deadlocks, reachable, plan_push, 
+                    find_path, MOVES)
 from model import State, Pos, Move
 
 
@@ -65,6 +66,9 @@ def solve(state: State) -> Optional[List[Move]]:
 			print(next(c), len(heap), len(seen), time.time() - start)
 			return path
 			
+		if any(find_deadlocks(state)):
+			continue
+		
 		in_reach = reachable(state)
 		
 		for box in state.boxes:
@@ -99,7 +103,7 @@ def main():
 	from parser import load_levels, load_level
 	from model import SokobanGame
 	filename = "microban.txt"
-	level = int(sys.argv[1]) if len(sys.argv) > 1 else 1
+	level = int(sys.argv[1]) if len(sys.argv) > 1 else 0
 	config_dir = os.path.join(os.environ["HOME"], ".config", "t-kuester", "sokoban")
 	levels = load_levels(os.path.join(config_dir, filename))
 	game = SokobanGame(filename, levels, [0] * 155)

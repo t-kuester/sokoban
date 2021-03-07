@@ -179,6 +179,7 @@ class SokobanFrame(tk.Frame):
 		self.canvas.delete("all" if redraw_level else "state")
 		w = self.get_cellwidth()
 		to_xy = lambda pos: (pos.c * w, pos.r * w, pos)
+		deadlocked = set(search.find_deadlocks(self.game.state))
 		
 		if redraw_level:
 			for x, y, _ in map(to_xy, self.game.state.level.walls):
@@ -191,11 +192,11 @@ class SokobanFrame(tk.Frame):
 			for x, y, _ in map(to_xy, search.reachable(self.game.state)):
 				self.canvas.create_oval(x+w*.4, y+w*.4, x+w*.6, y+w*.6, outline="#aaaaee", fill="#aaaaee", **tags)
 		
-		
 		for x, y, _ in map(to_xy, self.game.state.level.deadends):
 			self.canvas.create_rectangle(x, y, x+w, y+w, fill=Color.DEAD, **tags)
 		for x, y, p in map(to_xy, self.game.state.boxes):
-			color = Color.PLYR if p == self.selected else Color.BOX
+			color = Color.PLYR if p == self.selected else \
+			        Color.BOX if p not in deadlocked else Color.DEAD
 			self.canvas.create_rectangle(x+w*.2, y+w*.2, x+w*.8, y+w*.8, fill=color, **tags)
 		x, y, _ = to_xy(self.game.state.player)
 		self.canvas.create_oval(x+w*.3, y+w*.3, x+w*.7, y+w*.7, fill=Color.PLYR, **tags)
