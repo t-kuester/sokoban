@@ -46,7 +46,7 @@ def find_path(state: State, goal: Pos) -> Optional[List[Move]]:
 		return None
 	if state.player == goal:
 		return []
-	
+
 	queue = collections.deque([(state.player, [])])
 	visited = set()
 
@@ -99,7 +99,7 @@ def find_deadlocks(state: State) -> Iterable[Pos]:
 	being next to each other against a wall, or clusters of four boxes.
 	"""
 	occupied = state.boxes | state.level.walls
-	adjacent = [[(-1,-1), (-1, 0), (0,-1)], [(-1, 0), (-1, 1), (0, 1)], 
+	adjacent = [[(-1,-1), (-1, 0), (0,-1)], [(-1, 0), (-1, 1), (0, 1)],
 			    [( 0, 1), ( 1, 0), (1, 1)], [( 0,-1), ( 1,-1), (1, 0)]]
 	return (box for box in state.boxes - state.level.goals
 			    if any(all(box.add(Move(*a)) in occupied for a in adj)

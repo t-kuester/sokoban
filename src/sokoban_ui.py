@@ -38,11 +38,11 @@ class Color:
 
 class SokobanFrame(tk.Frame):
 	"""Sokoban Game Frame.
-	
+
 	This class provides the graphical interface to the Sokoban game, including
 	keyboard and mouse control, loading level sets, undo, etc.
 	"""
-	
+
 	def __init__(self, master, game):
 		"""Create new Sokoban Frame instance, using a given game instance and
 		a dictionary holding the scores for the individual levels.
@@ -51,26 +51,26 @@ class SokobanFrame(tk.Frame):
 		self.master.title(f"Sokoban - {game.title}")
 		self.game = game
 		self.pack(fill=tk.BOTH, expand=tk.YES)
-		
+
 		self.selected = None
 		self.path = None
 		self.show_reachable = False
 
 		self.canvas = tk.Canvas(self)
 		self.canvas.pack(side=tk.TOP, fill=tk.BOTH, expand=tk.YES)
-		
+
 		self.status = tk.Label(self)
 		self.status.pack(side=tk.LEFT)
-		
+
 		self.history = tk.Label(self)
 		self.history.pack(side=tk.RIGHT)
-		
+
 		self.bind_all("<KeyPress>", self.handle_keys)
 		self.bind_all("<Shift-KeyPress>", lambda e: self.handle_keys(e, True))
 		self.canvas.bind("<ButtonRelease>", self.handle_mouse)
 		self.bind("<Configure>", lambda _: self.draw_state(redraw_level=True))
 		self.update_state()
-		
+
 	def handle_keys(self, event, shift=False):
 		"""Handle key events, e.g. or movement, save, load, undo, restart, etc.
 		"""
@@ -112,7 +112,7 @@ class SokobanFrame(tk.Frame):
 		if event.keysym == "period":
 			self.show_reachable ^= True
 		self.update_state()
-		
+
 	def handle_mouse(self, event):
 		"""Handle mouse events for planning movement and box-pushing,
 		"""
@@ -158,7 +158,7 @@ class SokobanFrame(tk.Frame):
 		self.update_state()
 
 	def update_state(self):
-		"""Check the current state of the game (solved or not, number of steps, 
+		"""Check the current state of the game (solved or not, number of steps,
 		etc.), update the status line, and redraw the canvas.
 		"""
 		self.game.update_score()
@@ -171,7 +171,7 @@ class SokobanFrame(tk.Frame):
 		self.status.configure(text=status)
 		self.history.configure(text=history)
 		self.draw_state()
-		
+
 	def draw_state(self, redraw_level=False):
 		"""Draw the current level and/or state of the game to the canvas.
 		"""
@@ -180,18 +180,18 @@ class SokobanFrame(tk.Frame):
 		w = self.get_cellwidth()
 		to_xy = lambda pos: (pos.c * w, pos.r * w, pos)
 		deadlocked = set(search.find_deadlocks(self.game.state))
-		
+
 		if redraw_level:
 			for x, y, _ in map(to_xy, self.game.state.level.walls):
 				self.canvas.create_rectangle(x, y, x+w, y+w, fill=Color.WALL)
 			for x, y, _ in map(to_xy, self.game.state.level.goals):
 				self.canvas.create_oval(x+w*.1, y+w*.1, x+w*.9, y+w*.9, fill=Color.GOAL)
-			
+
 		tags = {"tag": "state"}
 		if self.show_reachable:
 			for x, y, _ in map(to_xy, search.reachable(self.game.state)):
 				self.canvas.create_oval(x+w*.4, y+w*.4, x+w*.6, y+w*.6, outline="#aaaaee", fill="#aaaaee", **tags)
-		
+
 		for x, y, _ in map(to_xy, self.game.state.level.deadends):
 			self.canvas.create_rectangle(x, y, x+w, y+w, fill=Color.DEAD, **tags)
 		for x, y, p in map(to_xy, self.game.state.boxes):
@@ -200,7 +200,7 @@ class SokobanFrame(tk.Frame):
 			self.canvas.create_rectangle(x+w*.2, y+w*.2, x+w*.8, y+w*.8, fill=color, **tags)
 		x, y, _ = to_xy(self.game.state.player)
 		self.canvas.create_oval(x+w*.3, y+w*.3, x+w*.7, y+w*.7, fill=Color.PLYR, **tags)
-	
+
 	def get_cellwidth(self):
 		"""Simple helper method for getting the optimal width for a cell.
 		"""

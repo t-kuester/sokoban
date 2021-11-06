@@ -33,7 +33,7 @@ class Pos(NamedTuple):
 	@lru_cache(None)
 	def add(self, move: Move):
 		return Pos(self.r + move.dr, self.c + move.dc)
-	
+
 	def dist(self, pos) -> int:
 		return abs(self.r - pos.r) + abs(self.c - pos.c)
 
@@ -43,34 +43,34 @@ class State:
 	and holding the current positions of the boxes and the player, as well as
 	the history of applied moves.
 	"""
-	
+
 	def __init__(self, level, boxes, player, history=None):
 		self.level = level
 		self.boxes = set(boxes)
 		self.player = player
 		self.history = list(history or [])
 		self.redoable = []
-		
+
 	def copy(self):
 		""" Create copy of this state, e.g. for making a savestate.
 		"""
 		return State(self.level, self.boxes, self.player, self.history)
-	
+
 	def is_free(self, pos: Pos) -> bool:
 		""" Check whether given position is free.
 		"""
 		return pos not in self.level.walls and pos not in self.boxes
-	
+
 	def can_move(self, move: Move) -> bool:
-		""" Check whether player can move to an adjacent location, with or 
+		""" Check whether player can move to an adjacent location, with or
 		without being allowed to push a box.
 		"""
 		next_ = self.player.add(move)
 		return (self.is_free(next_) or
 				move.push and next_ in self.boxes and self.is_free(next_.add(move)))
-	
+
 	def move(self, move: Move, _clear_redo=True):
-		""" Move to an adjacent location, after checking whether that move would 
+		""" Move to an adjacent location, after checking whether that move would
 		be legal, with or without being allowed to move a box.
 		"""
 		if self.can_move(move):
@@ -86,7 +86,7 @@ class State:
 			return True
 		else:
 			return False
-	
+
 	def undo(self) -> Optional[Move]:
 		""" Undo last step from game's progress, moving the player to the
 		previous position and "pulling" the crate, if previously pushed,
@@ -101,46 +101,46 @@ class State:
 			self.redoable.append(move)
 			return move
 		return None
-	
+
 	def redo(self):
 		""" Redo previously undone move, if any.
 		"""
 		if self.redoable:
 			self.move(self.redoable.pop(), _clear_redo=False)
-	
+
 	def is_solved(self) -> bool:
 		""" Check whether all goal tiles have a box placed on them.
 		"""
 		return all(g in self.boxes for g in self.level.goals)
-	
+
 
 class Level:
 	""" Class representing a Sokoban level, with valid floor positions, goals,
 	and initial state.
 	"""
-	
+
 	def __init__(self, walls, goals, boxes, player):
 		self.walls = frozenset(walls)
 		self.goals = frozenset(goals)
 		self.size = Pos(max(r+1 for r, c in walls), max(c+1 for r, c in walls))
 		self.deadends = set()
 		self.initial_state = State(self, boxes, player)
-	
+
 	def replay(self, moves: List[Move]) -> State:
 		""" Recreate state from list of moves applied to initial state.
 		"""
 		# TODO is this method actually still needed?
 		state = self.initial_state.copy()
-		for i, move in enumerate(moves):
+		for move in moves:
 			assert state.can_move(move)
 			state.move(move)
 		return state
-	
+
 
 class SokobanGame:
 	"""Class representing the current state of the Sokoban game.
 	"""
-	
+
 	def __init__(self, title, levels: List[Level], scores: List[int]):
 		self.title = title
 		self.levels = levels
@@ -149,7 +149,7 @@ class SokobanGame:
 		self.state = None
 		self.snapshot = None
 		self.load_level()
-	
+
 	def update_score(self):
 		""" Check if level is solved and update best score for current level if
 		number of turns is better.
@@ -158,7 +158,7 @@ class SokobanGame:
 			turns = len(self.state.history)
 			if self.scores[self.current] is None or self.scores[self.current] > turns:
 				self.scores[self.current] = turns
-	
+
 	def load_level(self, number=None):
 		""" Load level with given number from current level set.
 		If no number is given, reload the current level.
@@ -172,7 +172,7 @@ class SokobanGame:
 		""" Save snapshot of current state.
 		"""
 		self.snapshot = self.state.copy()
-	
+
 	def load_snapshot(self):
 		""" Restore snapshot of current state, if present.
 		"""

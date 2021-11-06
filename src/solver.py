@@ -8,15 +8,13 @@ game model and basic search- and planning-functions in the other modules.
 It is not very fast, but finds solutions for small levels with few boxes.
 """
 
-from typing import Optional, List, Tuple, Set, FrozenSet
+from typing import Optional, List, Tuple, FrozenSet
 
-from collections import deque
 from itertools import count
 from heapq import heappush, heappop
 import time
 
-from search import (find_deadends, find_deadlocks, reachable, plan_push, 
-                    find_path, MOVES)
+from search import find_deadends, find_deadlocks, reachable, plan_push, MOVES
 from model import State, Pos, Move
 
 
@@ -37,7 +35,7 @@ def solveable(state: State) -> bool:
 	""" Check whether a state is still solveable, i.e. no boxes are in deadends
 	(a state may still be unsolveable even if this functions returns true)
 	"""
-	return not any(box in state.level.deadends for box in state.boxes)	
+	return not any(box in state.level.deadends for box in state.boxes)
 
 
 def solve(state: State) -> Optional[List[Move]]:
@@ -48,7 +46,7 @@ def solve(state: State) -> Optional[List[Move]]:
 	"""
 	start = time.time()
 	state.level.deadends = find_deadends(state.level)
-	
+
 	c = count()
 	i = count()
 	seen = set()
@@ -56,21 +54,21 @@ def solve(state: State) -> Optional[List[Move]]:
 	while heap:
 		_, _, state, path = heappop(heap)
 		print(next(i), path_to_str(path))
-		
+
 		f = fingerprint(state)
 		if f in seen:
 			continue
 		seen.add(f)
-		
+
 		if state.is_solved():
 			print(next(c), len(heap), len(seen), time.time() - start)
 			return path
-			
+
 		if any(find_deadlocks(state)):
 			continue
-		
+
 		in_reach = reachable(state)
-		
+
 		for box in state.boxes:
 			for move in MOVES:
 				pos2 = box.add(move)
@@ -93,14 +91,14 @@ def solve(state: State) -> Optional[List[Move]]:
 DIRECTIONS_INV = {(0, +1, 1): "R", (0, -1, 1): "L", (-1, 0, 1): "U", (+1, 0, 1): "D",
                   (0, +1, 0): "r", (0, -1, 0): "l", (-1, 0, 0): "u", (+1, 0, 0): "d"}
 
-def path_to_str(path):
+def path_to_str(path: List[Move]) -> str:
 	return ''.join(DIRECTIONS_INV[tuple(m)] for m in path)
-	
-	
+
+
 def main():
 	""" for testing / profiling """
 	import os, sys
-	from parser import load_levels, load_level
+	from parser import load_level
 	from model import SokobanGame
 	filename = "microban.txt"
 	level = int(sys.argv[1]) if len(sys.argv) > 1 else 0

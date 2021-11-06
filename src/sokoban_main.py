@@ -41,14 +41,14 @@ def main():
 			gamestate = json.load(f)
 	except IOError:
 		gamestate = {}
-	
-	# EXPERIMENTAL: Aliases for level files	
+
+	# EXPERIMENTAL: Aliases for level files
 	try:
 		with open(os.path.join(config_dir, "aliases.json")) as f:
 			aliases = json.load(f)
 	except IOError:
 		aliases = {}
-	
+
 	# load level file given as parameter, or select from saves
 	if options.levelfile:
 		source = options.levelfile
@@ -63,11 +63,11 @@ def main():
 		else:
 			print("Level already exists")
 		exit(0)
-		
+
 	if not gamestate:
 		print("No levels known. Run with -f parameter to load levels first")
 		exit(1)
-	
+
 	orig_solved = {ls: sum(s is not None for s in sc) for ls, sc in gamestate.items()}
 	while True:
 		# print level selection menu

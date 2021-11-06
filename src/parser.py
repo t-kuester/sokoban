@@ -54,7 +54,7 @@ def load_levels(filename: str) -> List[Level]:
 				for k, group in groupby(levelfile, key=lambda line: line.lstrip().startswith(WALL)) if k]
 
 
-# testing	
+# testing
 if __name__ == "__main__":
 	levels = load_levels("test.txt")
 	print("Number of levels:", len(levels))
