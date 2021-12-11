@@ -1,0 +1,65 @@
+REFACTORING
+- improve Move <-> Character conversion
+- ordentliche Python modul-struktur
+- in-game help
+- komplette history speichern, wenn kein snapshot vorhanden, level-lösung laden
+- smooth animations
+- alias, solve und reachable bisschen aufräumen, doku schreiben
+- find-deadlocks
+- re-organize search code? move solver to search, and move checks to new module?
+- proper module structure
+- unit tests instead of "main" for testing in most classes
+- more linting
+
+LEVELS UND CONFIG
+- so wie es jetzt ist: ganz okay, aber umständlich levels hinzuzufügen, blöde sortierung
+  - alternativ einfach alle Levels in config-ordner kopieren und von dort laden?
+- wäre nett aliases vergeben zu können, bspw. "masmicroban.txt" -> "Microban 2"
+  - in aktueller config nicht so leicht, müsste ein zusätzliches Level einfügen
+  - alternativ: eine saves-file pro Level mit gleichem Namen?
+  - könnte auch für kapselung in SokobanGame klasse ganz nett sein
+  - auch viel einfacher, so bereits gelöste levels "auszublenden"
+  - aber man muss erstmal _alle_ saves-files laden um das menü anzuzeigen...
+  
+sokoban
++- levels
+   +- masmicroban.txt
++- saves
+   +- masmicroban.json
+      +- alias: Microban 2
+      +- scores: [47, 182, ...]
+
+
+BENCHMARK
+- Namedtuple vs namedtuple vs dataclass?
+- cache/memoize Pos.add or Pos-creation in general
+  - solve microban i, level 2, 3 runs
+  - cache nothing:     1.7  s (0.35  for add)
+  - cache Pos:         1.13 s (0.22  for add)
+  - cache add:         0.93 s (0.001 for add)
+  - cache Pos and add: 0.82 s (0.000 for add)
+- check reachable from-push positions in solver? microban 1 lvl 5
+  - w/  fast, w/  check: 1137 steps,  4.1 s
+  - w/  fast, w/o check: 1345 steps,  7.6 s
+  - w/o fast, w/  check: 3298 steps,  8.1 s
+  - w/o fast, w/o check: 3817 steps, 16.1 s
+  - SUPER speed-boost, but why does it evaluate fewer steps???
+- find_path
+- is_free: fast, but called 60k times to solve microban 1 lvl 2
+
+
+DEADLOCK-DETECTION
+Benchmark, microban level 4 (i.e. 5)
+output: popped, path / total states created, current on heap, seen time
+
+NOT CHECKING
+8213 LuRllDrdRdrruuLLdlUddlluR
+14300 6086 2206 31.273768663406372
+
+CHECKING BUT NOT PRUNING
+8213 LuRllDrdRdrruuLLdlUddlluR
+14300 6086 2206 28.22984218597412
+
+CHECKING AND PRUNING
+7586 LuRllDrdRdrruuLLdlUddlluR
+13399 5812 2067 26.285390853881836
