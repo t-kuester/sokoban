@@ -1,7 +1,7 @@
 Sokoban
 =======
 
-_2015-2017, Tobias Küster_
+_2015-2021, Tobias Küster_
 
 Just my version of the classic Sokoban puzzle. Initially, this was just one among
 many little entries in my `games` repository, but I like this one quite a bit (in
@@ -65,15 +65,17 @@ UI Symbols:
 * blue dot: player
 * green circle: target for box
 * yellow box: a regular box
-* blue box: box selected for push-planning
-* dark-grey boxes: walls/obstacles
+  * blue box: box selected for push-planning
+  * red box: a box that is not on a target and can not be moved any more
+* dark-grey block: walls/obstacles
+* light-red block: deadend (boxes can't reach a target from here)
 
 Status Line Format:
 * current Level
 * solved / total number of levels in current level set
 * number of steps used so far
 * best number of steps used for this level
-* last 30 moves (u/l/r/r; upper-case means pushed)
+* last 30 moves (u/l/d/r; upper-case means pushed)
 
 
 Controls
@@ -87,6 +89,7 @@ Keyboard-Controls:
 * R: reload level
 * S / L: save or load single snapshot (lost when switching the level)
 * D: show dead-ends
+* . (period): show positions reachable without pushing
 * Z / Y: undo/redo last moves
 * Q: quit
 

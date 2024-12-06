@@ -33,7 +33,9 @@ class Color:
 	GOAL = "#88CC88"
 	BOX  = "#CCCC88"
 	PLYR = "#8888CC"
-	DEAD = "#CC8888"
+	DEAD = "#CCAAAA"
+	STUCK = "#CC8888"
+	REACH = "#AAAAAA"
 
 
 class SokobanFrame(tk.Frame):
@@ -188,15 +190,14 @@ class SokobanFrame(tk.Frame):
 				self.canvas.create_oval(x+w*.1, y+w*.1, x+w*.9, y+w*.9, fill=Color.GOAL)
 
 		tags = {"tag": "state"}
+		for x, y, _ in map(to_xy, self.game.state.level.deadends):
+			self.canvas.create_rectangle(x+1, y+1, x+w-1, y+w-1, outline=Color.DEAD, fill=Color.DEAD, **tags)
 		if self.show_reachable:
 			for x, y, _ in map(to_xy, search.reachable(self.game.state)):
-				self.canvas.create_oval(x+w*.4, y+w*.4, x+w*.6, y+w*.6, outline="#aaaaee", fill="#aaaaee", **tags)
-
-		for x, y, _ in map(to_xy, self.game.state.level.deadends):
-			self.canvas.create_rectangle(x, y, x+w, y+w, fill=Color.DEAD, **tags)
+				self.canvas.create_oval(x+w*.4, y+w*.4, x+w*.6, y+w*.6, outline=Color.REACH, fill=Color.REACH, **tags)
 		for x, y, p in map(to_xy, self.game.state.boxes):
 			color = Color.PLYR if p == self.selected else \
-			        Color.BOX if p not in deadlocked else Color.DEAD
+			        Color.BOX if p not in deadlocked else Color.STUCK
 			self.canvas.create_rectangle(x+w*.2, y+w*.2, x+w*.8, y+w*.8, fill=color, **tags)
 		x, y, _ = to_xy(self.game.state.player)
 		self.canvas.create_oval(x+w*.3, y+w*.3, x+w*.7, y+w*.7, fill=Color.PLYR, **tags)

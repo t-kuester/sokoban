@@ -1,15 +1,12 @@
 REFACTORING
 - improve Move <-> Character conversion
-- ordentliche Python modul-struktur
 - in-game help
 - komplette history speichern, wenn kein snapshot vorhanden, level-lösung laden
 - smooth animations
 - alias, solve und reachable bisschen aufräumen, doku schreiben
-- find-deadlocks
 - re-organize search code? move solver to search, and move checks to new module?
 - proper module structure
 - unit tests instead of "main" for testing in most classes
-- more linting
 
 LEVELS UND CONFIG
 - so wie es jetzt ist: ganz okay, aber umständlich levels hinzuzufügen, blöde sortierung
