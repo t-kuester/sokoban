@@ -98,7 +98,7 @@ def path_to_str(path: List[Move]) -> str:
 def main():
 	""" for testing / profiling """
 	import os, sys
-	from parser import load_level
+	from parser import load_levels
 	from model import SokobanGame
 	filename = "microban.txt"
 	level = int(sys.argv[1]) if len(sys.argv) > 1 else 0
